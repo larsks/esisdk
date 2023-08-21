@@ -1,3 +1,9 @@
+cache:
+  max_age: 90
+  class: dogpile.cache.memory
+  expiration:
+    server: 1
+    port: 1
 clouds:
   _test_cloud_:
     auth:
@@ -19,7 +25,7 @@ clouds:
   _bogus_test_:
     auth_type: bogus
     auth:
-      auth_url: https://identity.example.com/v2.0
+      auth_url: http://identity.example.com/v2.0
       username: _test_user_
       password: _test_pass_
       project_name: _test_project_

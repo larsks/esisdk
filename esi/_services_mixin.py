@@ -10,13 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from esi import _services_mixin
-from esi.cloud import _lease
-from openstack import connection
+from esi.lease import lease_service
 
 
-class ESIConnection(connection.Connection,
-                    _services_mixin.ServicesMixin,
-                    _lease.LeaseCloudMixin):
-    def __init__(self, **kwargs):
-        super(ESIConnection, self).__init__(**kwargs)
+class ServicesMixin:
+    lease = lease_service.LeaseService(service_type='lease')
