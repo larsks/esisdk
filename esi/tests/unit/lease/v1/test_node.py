@@ -23,6 +23,8 @@ FAKE = {'uuid': 'abc_001',
         'lease_uuid': 'lease_001',
         'future_offers': None,
         'future_leases': None,
+        'resource_class': 'test',
+        'properties': None
         }
 
 
@@ -46,7 +48,9 @@ class TestNode(base.TestCase):
         self.assertEqual(FAKE['lessee'], n.lessee)
         self.assertEqual(FAKE['provision_state'], n.provision_state)
         self.assertEqual(FAKE['maintenance'], n.maintenance)
-        self.assertEqual(FAKE['offer_uuid'], n.offer_id)
-        self.assertEqual(FAKE['lease_uuid'], n.lease_id)
+        self.assertEqual(FAKE['offer_uuid'], n.offer_uuid)
+        self.assertEqual(FAKE['lease_uuid'], n.lease_uuid)
         self.assertEqual(FAKE['future_offers'], n.future_offers)
         self.assertEqual(FAKE['future_leases'], n.future_leases)
+        self.assertEqual(FAKE['resource_class'], n.resource_class)
+        self.assertEqual(FAKE['properties'], n.properties)

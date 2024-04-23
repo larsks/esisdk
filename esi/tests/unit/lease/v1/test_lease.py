@@ -13,7 +13,11 @@
 import datetime
 
 from esi.lease.v1 import lease
+from keystoneauth1 import adapter
+
+from openstack import exceptions
 from openstack.tests.unit import base
+from unittest import mock
 
 start = datetime.datetime(2016, 7, 16, 19, 20, 30)
 FAKE = {'uuid': 'lease_uuid',
@@ -32,9 +36,10 @@ FAKE = {'uuid': 'lease_uuid',
         'name': 'offer_name',
         'project': 'project_name',
         'project_id': 'project_id',
-        'resource': 'resource',
         'properties': None,
         'purpose': 'test',
+        'resource_properties': None,
+        'resource_name': 'node-1819'
         }
 
 
@@ -48,13 +53,14 @@ class TestLease(base.TestCase):
         self.assertTrue(l.allow_fetch)
         self.assertTrue(l.allow_commit)
         self.assertTrue(l.allow_delete)
+        self.assertTrue(l.allow_patch)
         self.assertTrue(l.allow_list)
         self.assertEqual('PATCH', l.commit_method)
 
     def test_instantiate(self):
         l = lease.Lease(**FAKE)
-        self.assertEqual(FAKE['uuid'], l.id)
-        self.assertEqual(FAKE['resource_uuid'], l.resource_id)
+        self.assertEqual(FAKE['uuid'], l.uuid)
+        self.assertEqual(FAKE['resource_uuid'], l.resource_uuid)
         self.assertEqual(FAKE['resource_type'], l.node_type)
         self.assertEqual(FAKE['resource_class'], l.resource_class)
         self.assertEqual(FAKE['parent_lease_uuid'], l.parent_lease_uuid)
@@ -66,6 +72,27 @@ class TestLease(base.TestCase):
         self.assertEqual(FAKE['name'], l.name)
         self.assertEqual(FAKE['project'], l.project)
         self.assertEqual(FAKE['project_id'], l.project_id)
-        self.assertEqual(FAKE['resource'], l.lease_resource)
         self.assertEqual(FAKE['properties'], l.properties)
         self.assertEqual(FAKE['purpose'], l.purpose)
+        self.assertEqual(FAKE['resource_properties'], l.resource_properties)
+        self.assertEqual(FAKE['resource_name'], l.resource_name)
+
+
+@mock.patch.object(exceptions, 'raise_from_response', mock.Mock())
+class TestLeaseUpdate(object):
+    def setUp(self):
+        super(TestLeaseUpdate, self).setUp()
+        self.lease = lease.Lease(**FAKE)
+        self.session = lease.Mock(
+            spec=adapter.Adapter, default_microversion=None
+        )
+        self.session.log = mock.Mock()
+
+    def test_update_lease(self):
+        self.lease.update(self.session)
+        self.session.get.assert_called_once_with(
+            'lease/%s' % self.lease.id,
+            headers=mock.ANY,
+            microversion=None,
+            retriable_status_codes=None,
+        )

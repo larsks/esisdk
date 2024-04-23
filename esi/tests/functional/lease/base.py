@@ -11,12 +11,18 @@
 #    under the License.
 
 from esi import connection
-
 from openstack.tests.functional import base
+
+
+#: Defines the OpenStack Client Config (OCC) cloud key in your OCC config
+#: file, typically in $HOME/.config/openstack/clouds.yaml. That configuration
+#: will determine where the functional tests will be run and what resource
+#: defaults will be used to run the functional tests.
 
 
 class BaseESILEAPTest(base.BaseFunctionalTest):
     min_microversion = None
+    flavor = None
 
     def require_service(service_type, min_microversion=None, **kwargs):
         pass
@@ -26,7 +32,7 @@ class BaseESILEAPTest(base.BaseFunctionalTest):
         self.conn = connection.ESIConnection(config=base.TEST_CLOUD_REGION)
 
     def create_offer(self, node_id=None, node_type=None, **kwargs):
-        offer = self.conn.lease.create_offer(resource_id=node_id,
+        offer = self.conn.lease.create_offer(resource_uuid=node_id,
                                              node_type=node_type,
                                              **kwargs)
         self.addCleanup(
@@ -37,7 +43,7 @@ class BaseESILEAPTest(base.BaseFunctionalTest):
         return offer
 
     def create_lease(self, node_id=None, project_id=None, **kwargs):
-        lease = self.conn.lease.create_lease(resource_id=node_id,
+        lease = self.conn.lease.create_lease(resource_uuid=node_id,
                                              project_id=project_id,
                                              **kwargs)
         self.addCleanup(
@@ -46,3 +52,17 @@ class BaseESILEAPTest(base.BaseFunctionalTest):
             )
         )
         return lease
+
+    def claim_offer(self, offer, **kwargs):
+        lease = self.conn.lease.claim_offer(offer, **kwargs)
+        self.addCleanup(
+            lambda: self.conn.lease.delete_lease(
+                lease["uuid"], ignore_missing=True
+            )
+        )
+        return lease
+
+    def _pick_flavor(self):
+        # override -
+        # openstack.tests.functional.base.BaseFunctionalTest._pick_flavor()
+        return

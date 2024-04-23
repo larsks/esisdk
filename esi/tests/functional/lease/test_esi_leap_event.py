@@ -11,24 +11,29 @@
 #    under the License.
 
 from esi.tests.functional.lease import base
+import os
 
 
 class TestESILEAPEvent(base.BaseESILEAPTest):
     def setUp(self):
         super(TestESILEAPEvent, self).setUp()
         self.project_id = self.conn.session.get_project_id()
+        self.node_1_uuid = os.getenv('NODE_1_UUID')
+        self.node_1_type = os.getenv('NODE_1_TYPE')
+        self.last_event_id = os.getenv('LAST_EVENT_ID')
 
     def test_event_list(self):
         """ Tests functionality "esi event list" using node_uuid or node name.
-            checks node_uuid or node_name is present in node list or not.
+            checks node_uuid or node_name is present in event list or not.
             Test steps:
             1) Create a lease for a node
-            2) Checks that the output of "event list" contains
+            2) Run event list with the last event id
+            3) Checks that the output of "event list" contains
                the node uuid it's tested with. """
 
-        self.create_lease('1719',
+        self.create_lease(self.node_1_uuid,
                           self.project_id,
-                          node_type='dummy_node')
-        events = self.conn.lease.events()
+                          node_type=self.node_1_type)
+        events = self.conn.lease.events(last_event_id=self.last_event_id)
         self.assertNotEqual(events, [])
-        self.assertIn('1719', [x['resource_uuid'] for x in events])
+        self.assertIn(self.node_1_uuid, [x['resource_uuid'] for x in events])

@@ -24,30 +24,30 @@ from openstack.cloud import meta
 class FakeOffer:
     def __init__(self, id, node_id, node_type):
         self.id = id
-        self.resource_id = node_id
+        self.resource_uuid = node_id
         self.node_type = node_type
 
 
 class FakeLease:
     def __init__(self, id, node_id, node_type, offer_uuid):
         self.id = id
-        self.resource_id = node_id
+        self.resource_uuid = node_id
         self.node_type = node_type
         self.offer_uuid = offer_uuid
 
 
 class FakeNode:
-    def __init__(self, id, offer_id, lease_id):
+    def __init__(self, id, offer_uuid, lease_uuid):
         self.id = id
-        self.offer_id = offer_id
-        self.lease_id = lease_id
+        self.offer_uuid = offer_uuid
+        self.lease_uuid = lease_uuid
 
 
 class FakeEvent:
-    def __init__(self, id, event_type, event_time):
+    def __init__(self, id, event_type, last_event_time):
         self.id = id
         self.event_type = event_type
-        self.event_time = event_time
+        self.last_event_time = last_event_time
 
 
 def make_fake_offer(id, node_id, node_type):
@@ -63,16 +63,16 @@ def make_fake_lease(id, node_id, node_type, offer_uuid):
                                        offer_uuid=offer_uuid))
 
 
-def make_fake_node(id, offer_id, lease_id):
+def make_fake_node(id, offer_uuid, lease_uuid):
     return meta.obj_to_munch(FakeNode(id=id,
-                                      offer_id=offer_id,
-                                      lease_id=lease_id))
+                                      offer_uuid=offer_uuid,
+                                      lease_uuid=lease_uuid))
 
 
-def make_fake_event(id, event_type, event_time):
+def make_fake_event(id, event_type, last_event_time):
     return meta.obj_to_munch(FakeEvent(id=id,
                                        event_type=event_type,
-                                       event_time=event_time))
+                                       last_event_time=last_event_time))
 
 
 def get_lease_endpoint():

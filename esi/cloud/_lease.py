@@ -24,9 +24,9 @@ class LeaseCloudMixin:
         """Return a list of all offers."""
         return list(self.lease.offers(**kwargs))
 
-    def create_offer(self, resource_id, node_type, **kwargs):
+    def create_offer(self, resource_uuid, node_type, **kwargs):
         """Create an offer"""
-        return self.lease.create_offer(resource_id=resource_id,
+        return self.lease.create_offer(resource_uuid=resource_uuid,
                                        node_type=node_type,
                                        **kwargs)
 
@@ -42,9 +42,9 @@ class LeaseCloudMixin:
         """Return a list of all leases"""
         return list(self.lease.leases(**kwargs))
 
-    def create_lease(self, resource_id, project_id, **kwargs):
+    def create_lease(self, resource_uuid, project_id, **kwargs):
         """Create a lease"""
-        return self.lease.create_lease(resource_id=resource_id,
+        return self.lease.create_lease(resource_uuid=resource_uuid,
                                        project_id=project_id,
                                        **kwargs)
 

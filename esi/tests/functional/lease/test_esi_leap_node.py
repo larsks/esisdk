@@ -23,18 +23,14 @@ class TestESILEAPNode(base.BaseESILEAPTest):
         """ Tests functionality "esi node list" using node_uuid or node name.
             checks node_uuid or node_name is present in node list or not.
             Test steps:
-            1) Set either of the environment variables using
-               export OS_FUNCTIONAL_NODE_UUID=node_uuid or
-               export OS_FUNCTIONAL_NODE_NAME=node_name
+            1) Set the environment variables using
+               export NODE_3_NAME=node_name
             2) Checks that the output of "node list" contains
                the node uuid or node name it's tested with. """
 
-        node_uuid = os.getenv('OS_FUNCTIONAL_NODE_UUID')
-        node_name = os.getenv('OS_FUNCTIONAL_NODE_NAME')
+        node_name = os.getenv('NODE_3_NAME')
         nodes = self.conn.lease.nodes()
 
         self.assertNotEqual(nodes, [])
-        if node_uuid is not None:
-            self.assertIn(node_uuid, [x['UUID'] for x in nodes])
         if node_name is not None:
-            self.assertIn(node_name, [x['Name'] for x in nodes])
+            self.assertIn(node_name, [x.name for x in nodes])

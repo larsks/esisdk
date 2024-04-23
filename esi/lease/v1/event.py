@@ -28,11 +28,12 @@ class Event(resource.Resource):
 
     # client-side query parameter
     _query_mapping = resource.QueryParameters(
-        'ID',
+        'last_event_id',
         'event_type',
-        'event_time',
+        'last_event_time',
         'resource_type',
-        'resource_uuid'
+        'resource_uuid',
+        'lessee_or_owner_id'
     )
 
     #: The transaction date and time.
@@ -40,10 +41,16 @@ class Event(resource.Resource):
     #: The value of the resource. Also available in headers.
     id = resource.Body("id", alternate_id=True)
     event_type = resource.Body("event_type")
+    last_event_id = resource.Body("last_event_id")
+    last_event_time = resource.Body("last_event_time")
+    event_id = resource.Body("event_id")
     event_time = resource.Body("event_time")
     object_type = resource.Body("object_type")
     object_uuid = resource.Body("object_uuid")
     node_type = resource.Body("resource_type")
     resource_uuid = resource.Body("resource_uuid")
-    lease_id = resource.Body("lease_id")
+    lessee_or_owner_id = resource.Body("lessee_or_owner_id")
+    lessee_id = resource.Body("lessee_id")
     owner_id = resource.Body("owner_id")
+
+    _attr_aliases = {'resource_type': 'node_type'}

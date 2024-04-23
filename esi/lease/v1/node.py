@@ -36,13 +36,14 @@ class Node(resource.Resource):
     #: The transaction date and time.
     timestamp = resource.Header("x-timestamp")
     #: The value of the resource. Also available in headers.
-    id = resource.Body("uuid", alternate_id=True)
-    name = resource.Body("name")
+    uuid = resource.Body("uuid", alternate_id=True)
     owner = resource.Body("owner")
     lessee = resource.Body("lessee")
     provision_state = resource.Body("provision_state")
     maintenance = resource.Body("maintenance")
-    offer_id = resource.Body("offer_uuid")
-    lease_id = resource.Body("lease_uuid")
+    offer_uuid = resource.Body("offer_uuid")
+    lease_uuid = resource.Body("lease_uuid")
     future_offers = resource.Body("future_offers")
     future_leases = resource.Body("future_leases")
+    properties = resource.Body("properties")
+    resource_class = resource.Body("resource_class")
