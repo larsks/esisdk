@@ -31,12 +31,15 @@ FAKE = {'uuid': 'offer_uuid',
         'start_time': start,
         'end_time': start + datetime.timedelta(days=100),
         'status': 'available',
-        'availabilities': 'Availabilities',
+        'available_start_time': start,
+        'available_end_time': start + datetime.timedelta(days=101),
+        'availabilities': None,
         'name': 'offer_name',
         'project': 'project_name',
         'project_id': 'project_id',
-        'resource': 'resource',
+        'resource_name': 'resource',
         'properties': None,
+        'resource_properties': None
         }
 
 
@@ -55,8 +58,8 @@ class TestOffer(base.TestCase):
 
     def test_instantiate(self):
         o = offer.Offer(**FAKE)
-        self.assertEqual(FAKE['uuid'], o.id)
-        self.assertEqual(FAKE['resource_uuid'], o.resource_id)
+        self.assertEqual(FAKE['uuid'], o.uuid)
+        self.assertEqual(FAKE['resource_uuid'], o.resource_uuid)
         self.assertEqual(FAKE['resource_type'], o.node_type)
         self.assertEqual(FAKE['resource_class'], o.resource_class)
         self.assertEqual(FAKE['lessee'], o.lessee)
@@ -65,12 +68,18 @@ class TestOffer(base.TestCase):
         self.assertEqual(FAKE['start_time'], o.start_time)
         self.assertEqual(FAKE['end_time'], o.end_time)
         self.assertEqual(FAKE['status'], o.status)
+        self.assertEqual(FAKE['available_start_time'],
+                         o.available_start_time)
+        self.assertEqual(FAKE['available_end_time'],
+                         o.available_end_time)
         self.assertEqual(FAKE['availabilities'], o.availabilities)
         self.assertEqual(FAKE['name'], o.name)
         self.assertEqual(FAKE['project'], o.project)
         self.assertEqual(FAKE['project_id'], o.project_id)
-        self.assertEqual(FAKE['resource'], o.offer_resource)
+        self.assertEqual(FAKE['resource_name'], o.resource_name)
         self.assertEqual(FAKE['properties'], o.properties)
+        self.assertEqual(FAKE['resource_properties'],
+                         o.resource_properties)
 
 
 @mock.patch.object(exceptions, 'raise_from_response', mock.Mock())

@@ -174,6 +174,19 @@ class Proxy(proxy.Proxy):
         """
         return self._create(_lease.Lease, **attrs)
 
+    def update_lease(self, lease, **attrs):
+        """Update a lease.
+
+        :param lease: The value can be the ID of a lease or a
+            :class:`~esi_leap.v1.lease.Lease` instance.
+        :param dict attrs: The attributes to update on the lease.
+
+        :returns: The updated lease
+        :rtype: :class:`~esi_leap.v1.lease.Lease`.
+        """
+        res = self._get_resource(_lease.Lease, lease)
+        return res.update(self, **attrs)
+
     def get_lease(self, lease, fields=None):
         """Get a specific lease.
 
@@ -203,12 +216,12 @@ class Proxy(proxy.Proxy):
         """
         return self._delete(_lease.Lease, lease, ignore_missing=ignore_missing)
 
-    def nodes(self):
+    def nodes(self, **query):
         """Retrieve a generator of nodes.
 
         :returns: A generator of lease instances.
         """
-        return _node.Node.list(self)
+        return _node.Node.list(self, **query)
 
     def events(self, **query):
         """Retrieve a generator of events.

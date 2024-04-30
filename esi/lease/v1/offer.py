@@ -32,17 +32,26 @@ class Offer(resource.Resource):
     _query_mapping = resource.QueryParameters(
         'resource_uuid',
         'resource_type',
+        'resource_class',
         'status',
         'uuid',
         'lessee',
+        'start_time',
+        'end_time',
+        'lessee_id',
+        'name',
+        'properties',
+        'project_id',
+        'available_start_time',
+        'available_end_time',
     )
 
     #: The transaction date and time.
     timestamp = resource.Header("x-timestamp")
     #: The value of the resource. Also available in headers.
-    id = resource.Body("uuid", alternate_id=True)
+    uuid = resource.Body("uuid", alternate_id=True)
     node_type = resource.Body("resource_type")
-    resource_id = resource.Body("resource_uuid")
+    resource_uuid = resource.Body("resource_uuid")
     resource_class = resource.Body("resource_class")
     lessee = resource.Body("lessee")
     lessee_id = resource.Body("lessee_id")
@@ -50,12 +59,17 @@ class Offer(resource.Resource):
     start_time = resource.Body("start_time")
     end_time = resource.Body("end_time")
     status = resource.Body("status")
+    available_start_time = resource.Body("available_start_time")
+    available_end_time = resource.Body("available_end_time")
     availabilities = resource.Body("availabilities")
-    name = resource.Body("name")
     project = resource.Body("project")
     project_id = resource.Body("project_id")
-    offer_resource = resource.Body("resource")
+    resource_name = resource.Body("resource")
     properties = resource.Body("properties")
+    resource_properties = resource.Body("resource_properties")
+
+    _attr_aliases = {'resource_type': 'node_type',
+                     'resource': 'resource_name'}
 
     def claim_offer(self, session, **kwargs):
         """Claim an offer.

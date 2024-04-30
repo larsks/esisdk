@@ -89,9 +89,9 @@ class TestLease(base.TestCase):
                 ),
             ]
         )
-        offer = self.cloud.create_offer(resource_id="fake_node_id",
+        offer = self.cloud.create_offer(resource_uuid="fake_node_id",
                                         node_type="fake_type")
-        self.assertEqual(offer.resource_id, self.fake_offer.resource_id)
+        self.assertEqual(offer.resource_uuid, self.fake_offer.resource_uuid)
         self.assertEqual(offer.node_type, self.fake_offer.node_type)
 
         self.assert_calls()
@@ -120,7 +120,7 @@ class TestLease(base.TestCase):
             ]
         )
         rep_json = self.cloud.claim_offer(self.fake_offer)
-        self.assertEqual(rep_json["resource_id"], self.fake_lease.resource_id)
+        self.assertEqual(rep_json["resource_uuid"], self.fake_lease.resource_uuid)
         self.assertEqual(rep_json["node_type"], self.fake_lease.node_type)
         self.assertEqual(rep_json["offer_uuid"], self.fake_offer.id)
         self.assert_calls()
@@ -157,10 +157,10 @@ class TestLease(base.TestCase):
                 ),
             ]
         )
-        lease = self.cloud.create_lease(resource_id="fake_node_id",
+        lease = self.cloud.create_lease(resource_uuid="fake_node_id",
                                         node_type="fake_type",
                                         project_id="fake_project")
-        self.assertEqual(lease.resource_id, self.fake_lease.resource_id)
+        self.assertEqual(lease.resource_uuid, self.fake_lease.resource_uuid)
         self.assertEqual(lease.node_type, self.fake_lease.node_type)
 
         self.assert_calls()
