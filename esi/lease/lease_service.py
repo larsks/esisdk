@@ -108,6 +108,29 @@ class LeaseService(service_description.ServiceDescription):
         version_kwargs = {}
         if version_string:
             version_kwargs['version'] = version_string
+            if getattr(
+                self.supported_versions[str(version_string)],
+                'skip_discovery',
+                False,
+            ):
+                # set the endpoint_override to the current
+                # catalog endpoint value + version number,
+                # otherwise next request will try to perform discovery.
+                temp_adapter = config.get_session_client('lease')
+                ep_override = temp_adapter.get_endpoint(skip_discovery=True)
+                ep_key = '{service_type}_endpoint_override'.format(
+                    service_type=self.service_type.replace('-', '_')
+                )
+                config.config[ep_key] = '{}/v{}'.format(
+                    ep_override, version_string)
+                return config.get_session_client(
+                    'lease',
+                    allow_version_hack=True,
+                    constructor=self.supported_versions[
+                        str(version_string)
+                    ],
+                    **version_kwargs,
+                )
         else:
             supported_versions = sorted(
                 [int(f) for f in self.supported_versions]

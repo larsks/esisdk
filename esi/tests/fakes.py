@@ -76,5 +76,5 @@ def make_fake_event(id, event_type, last_event_time):
 
 
 def get_lease_endpoint():
-    url = "https://lease.example.com/v1"
+    url = "https://lease.example.com"
     return ks_discover.EndpointData(catalog_url=url, api_version=(1, 0))
