@@ -27,6 +27,7 @@ class Proxy(proxy.Proxy):
         "node": _node.Node,
         "event": _event.Event
     }
+    skip_discovery = True
 
     def _get_with_fields(self, resource_type, value, fields=None):
         """Fetch an ESI-LEAP resource.
