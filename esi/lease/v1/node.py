@@ -29,6 +29,7 @@ class Node(resource.Resource):
         'name',
         'owner',
         'lessee',
+        'resource_class',
         'offer_uuid',
         'lease_uuid'
     )
