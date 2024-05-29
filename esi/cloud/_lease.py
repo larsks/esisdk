@@ -52,9 +52,9 @@ class LeaseCloudMixin:
         """Delete a lease"""
         return self.lease.delete_lease(lease)
 
-    def list_nodes(self):
+    def list_nodes(self, **kwargs):
         """Return a list of all nodes info"""
-        return list(self.lease.nodes())
+        return list(self.lease.nodes(**kwargs))
 
     def list_events(self, **kwargs):
         """Return a list of events"""
