@@ -829,3 +829,107 @@ class TestNetworkAttach(TestCase):
             self.connection,
             'node2',
             attach_info)
+
+
+class TestDetach(TestCase):
+
+    def setUp(self):
+        super(TestDetach, self).setUp()
+
+        self.node = utils.create_mock_object({
+            "id": "node_uuid_1",
+            "name": "node1",
+            "provision_state": "active"
+        })
+        self.neutron_port1 = utils.create_mock_object({
+            "id": "neutron_port_uuid_1",
+            "network_id": "network_uuid",
+            "name": "node1",
+            "mac_address": "bb:bb:bb:bb:bb:bb",
+            "fixed_ips": [{"ip_address": "2.2.2.2"}],
+            "trunk_details": None
+        })
+        self.neutron_port2 = utils.create_mock_object({
+            "id": "neutron_port_uuid_2",
+            "network_id": "network_uuid",
+            "name": "node1",
+            "mac_address": "cc:cc:cc:cc:cc:cc",
+            "fixed_ips": [{"ip_address": "3.3.3.3"}],
+            "trunk_details": None
+        })
+        self.port1 = utils.create_mock_object({
+            "id": "port_uuid_1",
+            "node_uuid": "node_uuid_1",
+            "address": "aa:aa:aa:aa:aa:aa",
+            "internal_info": {'tenant_vif_port_id': 'neutron_port_uuid_1'}
+        })
+        self.port2 = utils.create_mock_object({
+            "id": "port_uuid_2",
+            "node_uuid": "node_uuid_1",
+            "address": "bb:bb:bb:bb:bb:bb",
+            "internal_info": {}
+        })
+        self.port3 = utils.create_mock_object({
+            "id": "port_uuid_3",
+            "node_uuid": "node_uuid_1",
+            "address": "cc:cc:cc:cc:cc:cc",
+            "internal_info": {'tenant_vif_port_id': 'neutron_port_uuid_2'}
+        })
+
+        self.connection = mock.Mock()
+
+        self.connection.baremetal.get_node.\
+            return_value = self.node
+        self.connection.baremetal.detach_vif_from_node.\
+            return_value = True
+
+    def test_take_action(self):
+        self.connection.network.find_port.\
+            return_value = self.neutron_port1
+        self.connection.baremetal.ports.\
+            return_value = [self.port1]
+
+        result = nodes.network_detach(self.connection, 'node1')
+
+        self.connection.baremetal.detach_vif_from_node.\
+            assert_called_once_with(self.node, 'neutron_port_uuid_1')
+        self.assertEqual(True, result)
+
+    def test_take_multiple_port_action(self):
+        self.connection.network.find_port.\
+            return_value = self.neutron_port1
+        self.connection.baremetal.ports.\
+            return_value = [self.port1, self.port2]
+
+        result = nodes.network_detach(self.connection, 'node1', 'port_uuid_1')
+
+        self.connection.baremetal.detach_vif_from_node.\
+            assert_called_once_with(self.node, 'neutron_port_uuid_1')
+        self.assertEqual(True, result)
+
+    def test_take_action_port_exception(self):
+        self.connection.network.find_port.\
+            side_effect = exceptions.NotFoundException
+        self.connection.baremetal.ports.\
+            return_value = [self.port1, self.port2]
+
+        self.assertRaises(
+            exceptions.NotFoundException,
+            nodes.network_detach,
+            self.connection,
+            'node1',
+            'bad-port'
+        )
+
+    def test_take_action_mutiple_port_exception(self):
+        self.connection.network.find_port.\
+            side_effect = exceptions.ResourceFailure
+        self.connection.baremetal.ports.\
+            return_value = [self.port1, self.port2, self.port3]
+
+        self.assertRaises(
+            exceptions.ResourceFailure,
+            nodes.network_detach,
+            self.connection,
+            'node1'
+        )

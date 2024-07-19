@@ -247,3 +247,35 @@ def network_attach(connection, node, attach_info):
         'ports': [network_port] + trunk_ports,
         'networks': [parent_network] + trunk_networks
     }
+
+
+def network_detach(connection, node, port=None):
+    """Detaches a node's bare metal port from a network port
+
+    :param port: The name or ID of a network port
+
+    :returns: ``True`` if the VIF was detached, otherwise ``False``
+    """
+
+    node = connection.baremetal.get_node(node)
+
+    if port:
+        port = connection.network.find_port(port, ignore_missing=False)
+    else:
+        bm_ports = connection.baremetal.ports(details=True, node=node.id)
+
+        mapped_node_port_list = [bm_port for bm_port in bm_ports
+                                 if bm_port.internal_info.get('tenant_vif_port_id')]
+
+        if len(mapped_node_port_list) == 0:
+            raise exceptions.ResourceFailure(
+                'Node {0} is not associated with any port'.format(node.name))
+        elif len(mapped_node_port_list) > 1:
+            raise exceptions.ResourceFailure(
+                "Node {0} is associated with multiple ports. \
+                Port must be specified".format(node.name))
+        elif len(mapped_node_port_list) == 1:
+            port = mapped_node_port_list[0].internal_info["tenant_vif_port_id"]
+            port = connection.network.find_port(port, ignore_missing=False)
+
+    return connection.baremetal.detach_vif_from_node(node, port.id)
