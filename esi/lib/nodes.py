@@ -13,7 +13,12 @@
 
 import concurrent.futures
 
+from openstack import exceptions
+
 from esi.lib import networks
+
+
+OPENSTACK_IRONIC_API_VERSION = '1.69'
 
 
 def node_and_port_list(connection, filter_node=None):
@@ -138,3 +143,107 @@ def network_list(connection, filter_node=None, filter_network=None):
             })
 
     return data
+
+
+def network_attach(connection, node, attach_info):
+    """Attaches a node's bare metal port to a network port
+
+    :param connection: An OpenStack connection
+    :type connection: :class:`~openstack.connection.Connection`
+    :param node: The name or ID of a node
+    :param attach_info: A dictionary. Possible entrys are:
+        * 'network': <network name or ID>
+        * 'port': <port name or ID> (The network port to attach)
+        * 'trunk': <trunk name or ID>
+        * 'mac_address': <MAC addresses> (The MAC address of the bare metal port to attach)
+
+    :returns: a dictionary with the resulting node and network information
+    {
+        'node': openstack.baremetal.v1.node.Node,
+        'ports': [openstack.network.v2.port.Port]
+        'networks': [openstack.network.v2.network.Network]
+    }
+    """
+
+    network = attach_info.get('network')
+    port = attach_info.get('port')
+    trunk = attach_info.get('trunk')
+    mac_address = attach_info.get('mac_address')
+
+    if (network and port) or (network and trunk) or (port and trunk):
+        raise exceptions.InvalidRequest('Specify only one of network, port, or trunk')
+    if not network and not port and not trunk:
+        raise exceptions.InvalidRequest('You must specify either network, port, or trunk')
+
+    if network:
+        parent_network = connection.network.find_network(network, ignore_missing=False)
+        network_port = None
+    elif port:
+        network_port = connection.network.find_port(port, ignore_missing=False)
+    elif trunk:
+        trunk_network = connection.network.find_trunk(trunk, ignore_missing=False)
+        network_port = None
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        f1 = executor.submit(connection.baremetal.get_node, node)
+        f2 = executor.submit(connection.session.get_endpoint,
+                             service_type='baremetal',
+                             service_name='ironic',
+                             interface='public')
+        node = f1.result()
+        baremetal_endpoint = f2.result()
+
+    if mac_address:
+        baremetal_ports = list(connection.baremetal.ports(details=True, address=mac_address))
+        if len(baremetal_ports) == 0:
+            raise exceptions.ResourceFailure('MAC address {0} does not exist on node {1}'.format(mac_address, node.name))
+    else:
+        baremetal_ports = connection.baremetal.ports(details=True, node=node.id)
+        has_free_port = False
+        for bp in baremetal_ports:
+            if 'tenant_vif_port_id' not in bp.internal_info:
+                has_free_port = True
+                break
+
+        if not has_free_port:
+            raise exceptions.ResourceFailure('Node {0} has no free ports'.format(node.name))
+
+    if network:
+        port_name = 'esi-{0}-{1}'.format(node.name, parent_network.name)
+        network_ports = list(connection.network.ports(name=port_name, status='DOWN'))
+        if len(network_ports) > 0:
+            network_port = network_ports[0]
+        else:
+            network_port = connection.network.create_port(name=port_name,
+                                                          network_id=parent_network.id,
+                                                          device_owner='baremetal:none')
+    elif trunk:
+        network_port = connection.network.find_port(trunk_network.port_id, ignore_missing=False)
+
+    data = {'id': network_port.id}
+    if mac_address:
+        data['port_uuid'] = baremetal_ports[0].id
+
+    # TODO(ajamias) There should be a function in openstacksdk that specifies
+    # a bare metal port's MAC address to attach a network port to
+    connection.session.post(
+        '{0}/v1/nodes/{1}/vifs'.format(baremetal_endpoint, node.id),
+        headers={'X-OpenStack-Ironic-API-Version': OPENSTACK_IRONIC_API_VERSION},
+        json=data)
+    network_port = connection.network.find_port(network_port.id, ignore_missing=False)
+
+    networks_dict = {}
+    if network:
+        networks_dict[parent_network.id] = parent_network
+    elif trunk:
+        networks_dict[trunk_network.id] = trunk_network
+    parent_network, trunk_networks, trunk_ports, _ \
+        = networks.get_networks_from_port(connection,
+                                          network_port,
+                                          networks_dict=networks_dict)
+
+    return {
+        'node': node,
+        'ports': [network_port] + trunk_ports,
+        'networks': [parent_network] + trunk_networks
+    }

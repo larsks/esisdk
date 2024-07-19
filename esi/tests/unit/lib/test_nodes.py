@@ -13,6 +13,8 @@
 import mock
 from unittest import TestCase
 
+from openstack import exceptions
+
 from esi.lib import nodes
 
 from esi.tests.unit import utils
@@ -520,3 +522,310 @@ class TestNetworkList(TestCase):
         self.connection.network.ports.assert_called_once_with(network_id='network_uuid_2')
         self.connection.network.port_forwardings.assert_called_once_with(floating_ip=self.floating_ip_pfw)
         self.connection.network.get_port.assert_not_called()
+
+
+class TestNetworkAttach(TestCase):
+
+    def setUp(self):
+        super(TestNetworkAttach, self).setUp()
+
+        self.port1 = utils.create_mock_object({
+            "id": "port_uuid_1",
+            "node_uuid": "node_uuid_1",
+            "address": "aa:aa:aa:aa:aa:aa",
+            "internal_info": {'tenant_vif_port_id': 'neutron_port_uuid_1'}
+        })
+        self.port2 = utils.create_mock_object({
+            "id": "port_uuid_2",
+            "node_uuid": "node_uuid_1",
+            "address": "bb:bb:bb:bb:bb:bb",
+            "internal_info": {}
+        })
+        self.port3 = utils.create_mock_object({
+            "uuid": "port_uuid_3",
+            "node_uuid": "node_uuid_1",
+            "address": "cc:cc:cc:cc:cc:cc",
+            "internal_info": {}
+        })
+        self.node = utils.create_mock_object({
+            "id": "node_uuid_1",
+            "name": "node1",
+            "provision_state": "active"
+        })
+        self.node2 = utils.create_mock_object({
+            "id": "node_uuid_2",
+            "name": "node2",
+            "provision_state": "active"
+        })
+        self.node_available = utils.create_mock_object({
+            "uuid": "node_uuid_1",
+            "name": "node1",
+            "provision_state": "available"
+        })
+        self.node_manageable = utils.create_mock_object({
+            "uuid": "node_uuid_1",
+            "name": "node1",
+            "provision_state": "manageable",
+            "instance_info": {},
+            "driver_info": {'deploy_ramdisk': 'fake-image'},
+        })
+        self.node_manageable_instance_info = utils.create_mock_object({
+            "uuid": "node_uuid_1",
+            "name": "node1",
+            "provision_state": "manageable",
+            "instance_info": {'image_source': 'fake-image',
+                              'capabilities': {}},
+            "driver_info": {'deploy_ramdisk': 'fake-image'},
+        })
+        self.network = utils.create_mock_object({
+            "id": "network_uuid",
+            "name": "test_network"
+        })
+        self.network2 = utils.create_mock_object({
+            "id": "network_uuid_2",
+            "name": "test_network_2"
+        })
+        self.neutron_port1 = utils.create_mock_object({
+            "id": "neutron_port_uuid_2",
+            "network_id": "network_uuid",
+            "name": "node1-port1",
+            "mac_address": "bb:bb:bb:bb:bb:bb",
+            "fixed_ips": [{"ip_address": "2.2.2.2"}],
+            "trunk_details": None
+        })
+        self.neutron_port2 = utils.create_mock_object({
+            "id": "neutron_port_uuid_3",
+            "network_id": "network_uuid_2",
+            "name": "node1-port2",
+            "mac_address": "cc:cc:cc:cc:cc:cc",
+            "fixed_ips": [{"ip_address": "3.3.3.3"}],
+            "trunk_details": {
+                'sub_ports': [
+                    {'port_id': self.neutron_port1.id},
+                ]
+            }
+        })
+        self.trunk = utils.create_mock_object({
+            "id": "trunk_id",
+            "port_id": 'neutron_port_uuid_3',
+            "name": "test_trunk"
+        })
+
+        self.connection = mock.Mock()
+
+        self.connection.network.find_network.\
+            return_value = self.network
+        self.connection.session.get_endpoint.\
+            return_value = 'endpoint'
+        self.connection.network.create_port.\
+            return_value = self.neutron_port1
+        self.connection.network.ports.\
+            return_value = []
+        self.connection.network.find_trunk.\
+            return_value = self.trunk
+
+        def mock_baremetal_ports(details=False, node=None, address=None):
+            if node is None or node == 'node1' or node == 'node_uuid_1':
+                if address is None:
+                    return [self.port1, self.port2]
+                if address == "aa:aa:aa:aa:aa:aa":
+                    return [self.port1]
+                if address == "bb:bb:bb:bb:bb:bb":
+                    return [self.port2]
+                return []
+            return []
+        self.connection.baremetal.ports.side_effect = mock_baremetal_ports
+
+        def mock_find_port(port, ignore_missing=True):
+            if port == 'neutron_port_uuid_2' or port == 'node1-port1':
+                return self.neutron_port1
+            elif port == 'neutron_port_uuid_3' or port == 'node1-port2':
+                return self.neutron_port2
+            return None
+        self.connection.network.find_port.side_effect = mock_find_port
+
+        def mock_get_node(node):
+            if node == 'node1' or node == 'node_uuid_1':
+                return self.node
+            if node == 'node2' or node == 'node_uuid_2':
+                return self.node2
+            return None
+        self.connection.baremetal.get_node.side_effect = mock_get_node
+
+    @mock.patch('esi.lib.networks.get_networks_from_port')
+    def test_network_attach_network(self, mock_gnfp):
+        mock_gnfp.return_value = (self.network, [], [], None)
+
+        attach_info = {
+            'network': 'test_network'
+        }
+
+        actual = nodes.network_attach(self.connection,
+                                      'node1',
+                                      attach_info)
+
+        expected = {
+            'node': self.node,
+            'ports': [self.neutron_port1],
+            'networks': [self.network]
+        }
+
+        self.connection.network.find_network.assert_called_once_with('test_network', ignore_missing=False)
+        self.connection.baremetal.get_node.assert_called_once_with('node1')
+        self.connection.baremetal.ports.assert_called_once_with(details=True, node='node_uuid_1')
+        self.connection.network.ports.assert_called_once_with(name='esi-node1-test_network', status='DOWN')
+        self.connection.network.create_port.assert_called_once_with(name='esi-node1-test_network', network_id='network_uuid', device_owner='baremetal:none')
+        self.connection.session.post.assert_called_once_with('endpoint/v1/nodes/node_uuid_1/vifs', json={'id': 'neutron_port_uuid_2'}, headers={'X-OpenStack-Ironic-API-Version': '1.69'})
+        self.connection.network.find_port.assert_called_once_with('neutron_port_uuid_2', ignore_missing=False)
+        self.assertEqual(expected, actual)
+
+    @mock.patch('esi.lib.networks.get_networks_from_port')
+    def test_network_attach_port(self, mock_gnfp):
+        mock_gnfp.return_value = (self.network, [], [], None)
+
+        attach_info = {
+            'port': 'node1-port1'
+        }
+
+        actual = nodes.network_attach(self.connection,
+                                      'node1',
+                                      attach_info)
+
+        expected = {
+            'node': self.node,
+            'ports': [self.neutron_port1],
+            'networks': [self.network]
+        }
+
+        self.connection.network.find_port.assert_any_call('node1-port1', ignore_missing=False)
+        self.connection.baremetal.get_node.assert_called_once_with('node1')
+        self.connection.baremetal.ports.assert_called_once_with(details=True, node='node_uuid_1')
+        self.connection.session.post.assert_called_once_with('endpoint/v1/nodes/node_uuid_1/vifs', json={'id': 'neutron_port_uuid_2'}, headers={'X-OpenStack-Ironic-API-Version': '1.69'})
+        self.connection.network.find_port.assert_any_call('neutron_port_uuid_2', ignore_missing=False)
+        self.assertEqual(expected, actual)
+
+    @mock.patch('esi.lib.networks.get_networks_from_port')
+    def test_network_attach_port_and_mac_address(self, mock_gnfp):
+        mock_gnfp.return_value = (self.network, [], [], None)
+
+        attach_info = {
+            'mac_address': 'bb:bb:bb:bb:bb:bb',
+            'port': 'node1-port1'
+        }
+
+        actual = nodes.network_attach(self.connection,
+                                      'node1',
+                                      attach_info)
+
+        expected = {
+            'node': self.node,
+            'ports': [self.neutron_port1],
+            'networks': [self.network]
+        }
+
+        self.connection.network.find_port.assert_any_call('node1-port1', ignore_missing=False)
+        self.connection.baremetal.get_node.assert_called_once_with('node1')
+        self.connection.session.get_endpoint.assert_called_once_with(service_type='baremetal', service_name='ironic', interface='public')
+        self.connection.baremetal.ports.assert_called_once_with(details=True, address='bb:bb:bb:bb:bb:bb')
+        self.connection.session.post.assert_called_once_with('endpoint/v1/nodes/node_uuid_1/vifs', json={'id': 'neutron_port_uuid_2', 'port_uuid': 'port_uuid_2'}, headers={'X-OpenStack-Ironic-API-Version': '1.69'})
+        self.connection.network.find_port.assert_any_call('neutron_port_uuid_2', ignore_missing=False)
+        self.assertEqual(expected, actual)
+
+    @mock.patch('esi.lib.networks.get_networks_from_port')
+    def test_network_attach_trunk(self, mock_gnfp):
+        mock_gnfp.return_value = (self.network2, [self.network], [self.neutron_port1], None)
+
+        attach_info = {
+            'trunk': 'test_trunk'
+        }
+
+        actual = nodes.network_attach(self.connection,
+                                      'node1',
+                                      attach_info)
+
+        expected = {
+            'node': self.node,
+            'ports': [self.neutron_port2, self.neutron_port1],
+            'networks': [self.network2, self.network]
+        }
+
+        self.connection.network.find_trunk.assert_called_once_with('test_trunk', ignore_missing=False)
+        self.connection.baremetal.get_node.assert_called_once_with('node1')
+        self.connection.baremetal.ports.assert_called_once_with(details=True, node='node_uuid_1')
+        self.connection.network.find_port.assert_any_call('neutron_port_uuid_3', ignore_missing=False)
+        self.connection.session.post.assert_called_once_with('endpoint/v1/nodes/node_uuid_1/vifs', json={'id': 'neutron_port_uuid_3'}, headers={'X-OpenStack-Ironic-API-Version': '1.69'})
+        self.connection.network.find_port.assert_any_call('neutron_port_uuid_3', ignore_missing=False)
+        self.assertEqual(expected, actual)
+
+    def test_network_attach_invalid_request(self):
+        attach_info = {
+            'network': 'test_network',
+            'port': 'node1-port1'
+        }
+        self.assertRaisesRegex(
+            exceptions.InvalidRequest,
+            'Specify only one of network, port, or trunk',
+            nodes.network_attach,
+            self.connection,
+            'node1',
+            attach_info)
+
+        attach_info = {
+            'network': 'test_network',
+            'trunk': 'test_trunk'
+        }
+        self.assertRaisesRegex(
+            exceptions.InvalidRequest,
+            'Specify only one of network, port, or trunk',
+            nodes.network_attach,
+            self.connection,
+            'node1',
+            attach_info)
+
+        attach_info = {
+            'port': 'node1-port1',
+            'trunk': 'test_trunk'
+        }
+        self.assertRaisesRegex(
+            exceptions.InvalidRequest,
+            'Specify only one of network, port, or trunk',
+            nodes.network_attach,
+            self.connection,
+            'node1',
+            attach_info)
+
+        attach_info = {}
+        self.assertRaisesRegex(
+            exceptions.InvalidRequest,
+            'You must specify either network, port, or trunk',
+            nodes.network_attach,
+            self.connection,
+            'node1',
+            attach_info)
+
+    def test_network_attach_mac_address_dne(self):
+        attach_info = {
+            'network': 'test_network',
+            'mac_address': 'does_not_exist'
+        }
+
+        self.assertRaisesRegex(
+            exceptions.ResourceFailure,
+            'MAC address does_not_exist does not exist on node node1',
+            nodes.network_attach,
+            self.connection,
+            'node1',
+            attach_info)
+
+    def test_network_attach_no_free_ports(self):
+        attach_info = {
+            'network': 'test_network',
+        }
+
+        self.assertRaisesRegex(
+            exceptions.ResourceFailure,
+            'Node node2 has no free ports',
+            nodes.network_attach,
+            self.connection,
+            'node2',
+            attach_info)
