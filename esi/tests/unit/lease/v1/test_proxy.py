@@ -13,6 +13,7 @@
 from unittest import mock
 
 from esi.lease.v1 import _proxy
+from esi.lease.v1 import console_auth_token
 from esi.lease.v1 import event
 from esi.lease.v1 import lease
 from esi.lease.v1 import node
@@ -93,3 +94,13 @@ class TestEvent(TestESILEAPProxy):
         result = self.proxy.events(query=1)
         self.assertIs(result, mock_list.return_value)
         mock_list.assert_called_once_with(self.proxy, query=1)
+
+
+class TestConsoleAuthToken(TestESILEAPProxy):
+    def test_create_console_auth_token(self):
+        self.verify_create(self.proxy.create_console_auth_token,
+                           console_auth_token.ConsoleAuthToken)
+
+    def test_delete_console_auth_token(self):
+        self.verify_delete(self.proxy.delete_console_auth_token,
+                           console_auth_token.ConsoleAuthToken, False)
