@@ -11,6 +11,7 @@
 #    under the License.
 
 from esi.lease.v1 import _common
+from esi.lease.v1 import console_auth_token as _console_auth_token
 from esi.lease.v1 import event as _event
 from esi.lease.v1 import lease as _lease
 from esi.lease.v1 import node as _node
@@ -25,7 +26,8 @@ class Proxy(proxy.Proxy):
         "offer": _offer.Offer,
         "lease": _lease.Lease,
         "node": _node.Node,
-        "event": _event.Event
+        "event": _event.Event,
+        "console_auth_token": _console_auth_token.ConsoleAuthToken,
     }
     skip_discovery = True
 
@@ -245,3 +247,31 @@ class Proxy(proxy.Proxy):
         :returns: A generator of event instances.
         """
         return _event.Event.list(self, **query)
+
+    def create_console_auth_token(self, **attrs):
+        """Create a new console auth token from attributes.
+
+        :param string node_uuid_or_name: node uuid or name
+
+        :returns: The results of token creation.
+        :rtype: :class:`~esi_leap.v1.console_auth_token.ConsoleAuthToken`.
+        """
+        return self._create(_console_auth_token.ConsoleAuthToken, **attrs)
+
+    def delete_console_auth_token(self, node_uuid_or_name, ignore_missing=True):
+        """Delete a console auth token for a node.
+
+        :param string node_uuid_or_name: node uuid or name
+        :param bool ignore_missing: When set to ``False``, an exception
+            :class:`~openstack.exceptions.ResourceNotFound` will be raised
+            when the node could not be found. When set to ``True``, no
+            exception will be raised when attempting to delete a non-existent
+            offer.
+
+        :returns: The result of delete.
+        :rtype: :class:`~esi_leap.v1.console_auth_token.ConsoleAuthToken`.
+        """
+        return self._delete(
+            _console_auth_token.ConsoleAuthToken,
+            node_uuid_or_name,
+            ignore_missing=ignore_missing)
