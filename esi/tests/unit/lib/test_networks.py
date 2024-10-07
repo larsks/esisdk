@@ -389,3 +389,40 @@ class TestGetNetworksFromPort(TestCase):
         )
 
         self.assertEqual(actual, expected)
+
+
+class TestCreatePort(TestCase):
+
+    def setUp(self):
+        super(TestCreatePort, self).setUp()
+        self.connection = mock.Mock()
+        self.network = test_utils.create_mock_object({
+            "id": "network_uuid",
+            "name": "test_network"
+        })
+        self.port = test_utils.create_mock_object({
+            "id": "port_uuid",
+            "network_id": "network_uuid",
+            "name": "esi-port-test_network",
+        })
+
+    def test_create_port_with_defaults(self):
+        self.connection.network.ports.return_value = []
+        self.connection.network.create_port.return_value = self.port
+        actual_port = networks.create_port(self.connection, "node_name", self.network)
+        self.connection.network.ports.assert_called_once_with(
+            name='esi-node_name-test_network', status='DOWN'
+        )
+        self.connection.network.create_port.assert_called_once_with(
+            name='esi-node_name-test_network', network_id="network_uuid", device_owner="baremetal:none"
+        )
+        self.assertEqual(actual_port, self.port)
+
+    def test_create_port_with_existing_port(self):
+        self.connection.network.ports.return_value = [self.port]
+        actual_port = networks.create_port(self.connection, "node_name", self.network)
+        self.connection.network.ports.assert_called_once_with(
+            name='esi-node_name-test_network', status='DOWN'
+        )
+        self.connection.network.create_port.assert_not_called()
+        self.assertEqual(actual_port, self.port)
