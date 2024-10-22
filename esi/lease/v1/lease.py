@@ -39,6 +39,7 @@ class Lease(resource.Resource):
         'end_time',
         'owner_id',
         'resource_class',
+        'offer_uuid',
         'purpose',
         'properties',
     )
