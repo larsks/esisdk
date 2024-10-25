@@ -108,7 +108,7 @@ class Proxy(proxy.Proxy):
         """
         return self._get_with_fields(_offer.Offer, offer, fields=fields)
 
-    def delete_offer(self, offer, ignore_missing=True):
+    def delete_offer(self, offer, ignore_missing=False):
         """Delete an offer.
 
         :param offer: The value can be either the ID of an offer or
@@ -203,7 +203,7 @@ class Proxy(proxy.Proxy):
         """
         return self._get_with_fields(_lease.Lease, lease, fields=fields)
 
-    def delete_lease(self, lease, ignore_missing=True):
+    def delete_lease(self, lease, ignore_missing=False):
         """Delete a lease.
 
         :param lease: The value can be either the ID of a lease or
@@ -258,7 +258,7 @@ class Proxy(proxy.Proxy):
         """
         return self._create(_console_auth_token.ConsoleAuthToken, **attrs)
 
-    def delete_console_auth_token(self, node_uuid_or_name, ignore_missing=True):
+    def delete_console_auth_token(self, node_uuid_or_name, ignore_missing=False):
         """Delete a console auth token for a node.
 
         :param string node_uuid_or_name: node uuid or name
