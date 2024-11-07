@@ -209,14 +209,7 @@ def network_attach(connection, node, attach_info):
             raise exceptions.ResourceFailure('Node {0} has no free ports'.format(node.name))
 
     if network:
-        port_name = 'esi-{0}-{1}'.format(node.name, parent_network.name)
-        network_ports = list(connection.network.ports(name=port_name, status='DOWN'))
-        if len(network_ports) > 0:
-            network_port = network_ports[0]
-        else:
-            network_port = connection.network.create_port(name=port_name,
-                                                          network_id=parent_network.id,
-                                                          device_owner='baremetal:none')
+        network_port = networks.create_port(connection, node.name, parent_network)
     elif trunk:
         network_port = connection.network.find_port(trunk_network.port_id, ignore_missing=False)
 

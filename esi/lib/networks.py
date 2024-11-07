@@ -112,3 +112,26 @@ def get_networks_from_port(connection, port, networks_dict={}, floating_ips_dict
         floating_network = connection.network.get_network(floating_network_id)
 
     return parent_network, trunk_networks, trunk_ports, floating_network
+
+
+def create_port(connection, node_name, network):
+    """
+    Creates a port on the specified network using the network object.
+
+    :param connection: An OpenStack connection object used to interact with OpenStack services.
+    :param node_name: The name of the node associated with the port.
+    :param network: The network object where the port should be created.
+                    This object must have 'id' and 'name' attributes.
+
+    :return: The created port object, or an existing port if a matching one was found.
+    """
+
+    port_name = 'esi-{0}-{1}'.format(node_name, network.name)
+    existing_ports = list(connection.network.ports(name=port_name, status='DOWN'))
+
+    if existing_ports:
+        network_port = existing_ports[0]
+    else:
+        network_port = connection.network.create_port(name=port_name, network_id=network.id, device_owner='baremetal:none')
+
+    return network_port
