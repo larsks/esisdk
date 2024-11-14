@@ -89,7 +89,7 @@ def network_list(connection, filter_node=None, filter_network=None):
             filter_network = f3.result()
         f2 = executor.submit(networks.network_and_port_list, connection, filter_network)
         baremetal_nodes, baremetal_ports = f1.result()
-        network_ports, networks_dict, floating_ips_dict, port_forwardings_dict = f2.result()
+        network_ports_dict, networks_dict, floating_ips_dict, port_forwardings_dict = f2.result()
 
     data = []
     for baremetal_node in baremetal_nodes:
@@ -102,14 +102,14 @@ def network_list(connection, filter_node=None, filter_network=None):
             network_port_id = baremetal_port.internal_info.get('tenant_vif_port_id', None)
 
             if network_port_id:
-                network_port = next((np for np in network_ports
-                                     if np.id == network_port_id), None)
+                network_port = network_ports_dict.get(network_port_id)
 
             if network_port is not None and (not filter_network or filter_network.id == network_port.network_id):
                 parent_network, trunk_networks, trunk_ports, floating_network \
                     = networks.get_networks_from_port(connection,
                                                       network_port,
                                                       networks_dict,
+                                                      network_ports_dict,
                                                       floating_ips_dict)
 
                 network_info.append({

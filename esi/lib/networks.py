@@ -44,24 +44,37 @@ def network_and_port_list(connection, filter_network=None):
         f1 = executor.submit(get_ports, connection, filter_network)
         f2 = executor.submit(connection.network.networks)
         f3 = executor.submit(connection.network.ips)
-        network_ports = list(f1.result())
+        network_ports_dict = {port.id: port for port in list(f1.result())}
         networks_dict = {network.id: network for network in list(f2.result())}
         floating_ips = list(f3.result())
 
-    for floating_ip in floating_ips:
-        # no need to do this for floating IPs associated with a port,
-        # as port forwarding is irrelevant in such a case
-        if not floating_ip.port_id:
-            pfwds = list(connection.network.port_forwardings(floating_ip=floating_ip))
+        fip_futures = []
+        for floating_ip in floating_ips:
+            fip_futures.append(executor.submit(
+                get_floating_ip_and_port_forwarding,
+                connection,
+                floating_ip))
+        for fip_future in fip_futures:
+            floating_ip, pfwds = fip_future.result()
             if len(pfwds):
-                floating_ip.port_id = pfwds[0].internal_port_id
                 port_forwardings_dict[floating_ip.port_id] = pfwds
-        floating_ips_dict[floating_ip.port_id] = floating_ip
+            floating_ips_dict[floating_ip.port_id] = floating_ip
 
-    return network_ports, networks_dict, floating_ips_dict, port_forwardings_dict
+    return network_ports_dict, networks_dict, floating_ips_dict, port_forwardings_dict
 
 
-def get_networks_from_port(connection, port, networks_dict={}, floating_ips_dict={}):
+def get_floating_ip_and_port_forwarding(connection, floating_ip):
+    # no need to do this for floating IPs associated with a port,
+    # as port forwarding is irrelevant in such a case
+    pfwds = []
+    if not floating_ip.port_id:
+        pfwds = list(connection.network.port_forwardings(floating_ip=floating_ip))
+        if len(pfwds):
+            floating_ip.port_id = pfwds[0].internal_port_id
+    return floating_ip, pfwds
+
+
+def get_networks_from_port(connection, port, networks_dict={}, network_ports_dict={}, floating_ips_dict={}):
     """Gets associated network objects from a port object
 
     :param connection: An OpenStack connection
@@ -85,22 +98,19 @@ def get_networks_from_port(connection, port, networks_dict={}, floating_ips_dict
         parent_network = connection.network.get_network(network=port.network_id)
 
     if port.trunk_details:
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            subport_futures = []
-            subport_infos = port.trunk_details['sub_ports']
-            for subport_info in subport_infos:
-                subport_futures.append(executor.submit(
-                    connection.network.get_port,
-                    port=subport_info['port_id']
-                ))
-            for subport_future in subport_futures:
-                subport = subport_future.result()
-                if subport.network_id in networks_dict:
-                    trunk_network = networks_dict[subport.network_id]
-                else:
-                    trunk_network = connection.network.get_network(subport.network_id)
-                trunk_ports.append(subport)
-                trunk_networks.append(trunk_network)
+        subport_infos = port.trunk_details['sub_ports']
+        for subport_info in subport_infos:
+            if subport_info['port_id'] in network_ports_dict:
+                subport = network_ports_dict[subport_info['port_id']]
+            else:
+                subport = connection.network.get_port(subport_info['port_id'])
+
+            if subport.network_id in networks_dict:
+                trunk_network = networks_dict[subport.network_id]
+            else:
+                trunk_network = connection.network.get_network(subport.network_id)
+            trunk_ports.append(subport)
+            trunk_networks.append(trunk_network)
 
     floating_network_id = getattr(floating_ips_dict.get(port.id),
                                   'floating_network_id', None)
