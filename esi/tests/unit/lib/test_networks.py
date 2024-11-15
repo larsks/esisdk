@@ -168,10 +168,10 @@ class TestNetworkAndPortList(TestCase):
         actual = networks.network_and_port_list(self.connection)
 
         expected = (
-            [
-                self.neutron_port1,
-                self.neutron_port2
-            ],
+            {
+                'neutron_port_uuid_1': self.neutron_port1,
+                'neutron_port_uuid_2': self.neutron_port2
+            },
             {
                 'network_uuid_1': self.network1,
                 'network_uuid_2': self.network2,
@@ -192,9 +192,9 @@ class TestNetworkAndPortList(TestCase):
         actual = networks.network_and_port_list(self.connection, self.network1)
 
         expected = (
-            [
-                self.neutron_port1,
-            ],
+            {
+                'neutron_port_uuid_1': self.neutron_port1,
+            },
             {
                 'network_uuid_1': self.network1,
                 'network_uuid_2': self.network2,

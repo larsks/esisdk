@@ -253,14 +253,14 @@ class TestNetworkList(TestCase):
 
         def mock_network_ports(network_id=None):
             if network_id == 'network_uuid_1':
-                return [self.neutron_port1]
+                return [self.neutron_port1, self.sub_port1]
             elif network_id == 'network_uuid_2':
-                return [self.neutron_port2]
+                return [self.neutron_port2, self.sub_port2]
             if network_id == 'network_uuid_3':
                 return [self.neutron_port3]
             elif network_id:
                 return []
-            return [self.neutron_port1, self.neutron_port2, self.neutron_port3]
+            return [self.neutron_port1, self.neutron_port2, self.neutron_port3, self.sub_port1, self.sub_port2]
         self.connection.network.ports.side_effect = mock_network_ports
 
         def mock_find_network(name_or_id=None, ignore_missing=True):
@@ -398,8 +398,7 @@ class TestNetworkList(TestCase):
         self.connection.network.ports.assert_called_once_with()
         self.connection.network.port_forwardings.assert_called_once_with(floating_ip=self.floating_ip_pfw)
         self.connection.network.get_network.assert_not_called()
-        self.connection.network.get_port.assert_any_call(port='sub_port_uuid_1')
-        self.connection.network.get_port.assert_any_call(port='sub_port_uuid_2')
+        self.connection.network.get_port.assert_not_called()
 
     def test_network_list_filter_node(self):
         filter_node = 'node1'
@@ -448,8 +447,7 @@ class TestNetworkList(TestCase):
         self.connection.network.ports.assert_called_once_with()
         self.connection.network.port_forwardings.assert_called_once_with(floating_ip=self.floating_ip_pfw)
         self.connection.network.get_network.assert_not_called()
-        self.connection.network.get_port.assert_any_call(port='sub_port_uuid_1')
-        self.connection.network.get_port.assert_any_call(port='sub_port_uuid_2')
+        self.connection.network.get_port.assert_not_called()
 
     def test_network_list_filter_network(self):
         filter_node = None
@@ -487,8 +485,8 @@ class TestNetworkList(TestCase):
         self.connection.network.ports.assert_called_once_with(network_id='network_uuid_3')
         self.connection.network.port_forwardings.assert_called_once_with(floating_ip=self.floating_ip_pfw)
         self.connection.network.get_network.assert_not_called()
-        self.connection.network.get_port.assert_any_call(port='sub_port_uuid_1')
-        self.connection.network.get_port.assert_any_call(port='sub_port_uuid_2')
+        self.connection.network.get_port.assert_any_call('sub_port_uuid_1')
+        self.connection.network.get_port.assert_any_call('sub_port_uuid_2')
 
     def test_network_list_filter_node_network(self):
         filter_node = '11111111-2222-3333-4444-bbbbbbbbbbbb'
