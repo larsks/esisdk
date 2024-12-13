@@ -11,6 +11,7 @@
 #   under the License.
 
 import concurrent.futures
+import warnings
 
 from openstack import exceptions
 
@@ -265,18 +266,38 @@ def network_attach(connection, node, attach_info):
     }
 
 
-def network_detach(connection, node, port=None):
+def network_detach(
+    connection, node_name_or_uuid, port=None, port_names_or_uuids=None, all_ports=False
+):
     """Detaches a node's bare metal port from a network port
 
     :param port: The name or ID of a network port
 
-    :returns: ``True`` if the VIF was detached, otherwise ``False``
+    :returns: A list of ``(port_uuid, bool)`` tuples, where ``bool`` is ``True`` if the port was removed
+    successfully, ``False`` otherwise.
     """
 
-    node = connection.baremetal.get_node(node)
+    if port and port_names_or_uuids:
+        raise ValueError("do not set both port and port_names_or_uuids")
+
+    if (port or port_names_or_uuids) and all_ports:
+        raise ValueError("do not specify individual ports with all_ports=true")
 
     if port:
-        port = connection.network.find_port(port, ignore_missing=False)
+        port_names_or_uuids = [port]
+        warnings.warn(
+            "The 'port' parameter is deprecated and will be removed in a future release.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    node = connection.baremetal.get_node(node_name_or_uuid)
+    ports = []
+    if port_names_or_uuids:
+        ports = [
+            connection.network.find_port(port, ignore_missing=False)
+            for port in port_names_or_uuids
+        ]
     else:
         bm_ports = connection.baremetal.ports(details=True, node=node.id)
 
@@ -290,13 +311,26 @@ def network_detach(connection, node, port=None):
             raise exceptions.ResourceFailure(
                 "Node {0} is not associated with any port".format(node.name)
             )
+
+        if all_ports:
+            ports = [
+                connection.network.find_port(
+                    bmport.internal_info["tenant_vif_port_id"], ignore_missing=False
+                )
+                for bmport in mapped_node_port_list
+            ]
         elif len(mapped_node_port_list) > 1:
             raise exceptions.ResourceFailure(
-                "Node {0} is associated with multiple ports. \
-                Port must be specified".format(node.name)
+                "Node {0} is associated with multiple ports. Port must be specified".format(
+                    node.name
+                )
             )
         elif len(mapped_node_port_list) == 1:
-            port = mapped_node_port_list[0].internal_info["tenant_vif_port_id"]
-            port = connection.network.find_port(port, ignore_missing=False)
+            vif = mapped_node_port_list[0].internal_info["tenant_vif_port_id"]
+            port = connection.network.find_port(vif, ignore_missing=False)
+            ports = [port]
 
-    return connection.baremetal.detach_vif_from_node(node, port.id)
+    return [
+        (port.id, connection.baremetal.detach_vif_from_node(node, port.id))
+        for port in ports
+    ]
