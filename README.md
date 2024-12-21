@@ -1,17 +1,20 @@
 # esisdk
+
 Unified SDK for ESI
 
-## Use the SDK in python scripts
-### Install ESI SDK:
+## Install ESI SDK:
+
 ```
 python setup.py install
 ```
 
-### Create a connection to ESI SDK
+## Create a connection to ESI SDK
 
-There are several methods to establish a connection using the ESI SDK. Since the ***esi.connection.ESIConnection*** class inherits from ***openstack.connection.Connection***, [methods](https://docs.openstack.org/openstacksdk/latest/user/connection.html) applicable for creating connections in the OpenStack SDK can also be used with the ESI SDK. Below are some common ways to create an ESIConnection:
+There are several methods to establish a connection using the ESI SDK. Since the `esi.connection.ESIConnection` class inherits from `openstack.connection.Connection`, [methods applicable for creating connections](https://docs.openstack.org/openstacksdk/latest/user/connection.html)
+in the OpenStack SDK can also be used with the ESI SDK. Below are some common ways to create an `ESIConnection`:
 
-**Create a connection using only keyword arguments**
+### Create a connection using only keyword arguments
+
 ```
 from esi import connection
 
@@ -28,7 +31,9 @@ conn = connection.ESIConnection(
     interface='public'
 )
 ```
-**Create a connection from existing CloudRegion**
+
+### Create a connection from existing CloudRegion
+
 ```
 from esi import connection
 import openstack.config
@@ -40,8 +45,10 @@ config = openstack.config.get_cloud_region(
 conn = connection.ESIConnectionn(config=config)
 ```
 
-### Make API calls
+## Make API calls
+
 Detailed APIs can be found in the  `esi/lease/v1/_proxy.py` file. Below are simple examples demonstrating lease resource CRUD operations.
+
 ```
 import esi
 import os
@@ -66,5 +73,4 @@ def lease_update(conn, lease, **kwargs):
 # Delete a lease
 def lease_delete(conn, lease_id):
     leases = conn.lease.delete_lease(lease_id)
-
 ```
