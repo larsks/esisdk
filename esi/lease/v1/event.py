@@ -14,8 +14,8 @@ from openstack import resource
 
 
 class Event(resource.Resource):
-    resources_key = 'events'
-    base_path = '/events'
+    resources_key = "events"
+    base_path = "/events"
 
     # capabilities
     allow_create = True
@@ -23,17 +23,17 @@ class Event(resource.Resource):
     allow_commit = True
     allow_delete = True
     allow_list = True
-    commit_method = 'PATCH'
+    commit_method = "PATCH"
     commit_jsonpatch = True
 
     # client-side query parameter
     _query_mapping = resource.QueryParameters(
-        'last_event_id',
-        'event_type',
-        'last_event_time',
-        'resource_type',
-        'resource_uuid',
-        'lessee_or_owner_id'
+        "last_event_id",
+        "event_type",
+        "last_event_time",
+        "resource_type",
+        "resource_uuid",
+        "lessee_or_owner_id",
     )
 
     #: The transaction date and time.
@@ -53,4 +53,4 @@ class Event(resource.Resource):
     lessee_id = resource.Body("lessee_id")
     owner_id = resource.Body("owner_id")
 
-    _attr_aliases = {'resource_type': 'node_type'}
+    _attr_aliases = {"resource_type": "node_type"}

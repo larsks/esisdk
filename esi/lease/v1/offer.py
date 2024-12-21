@@ -16,8 +16,8 @@ from openstack import utils
 
 
 class Offer(resource.Resource):
-    resources_key = 'offers'
-    base_path = '/offers'
+    resources_key = "offers"
+    base_path = "/offers"
 
     # capabilities
     allow_create = True
@@ -25,25 +25,25 @@ class Offer(resource.Resource):
     allow_commit = True
     allow_delete = True
     allow_list = True
-    commit_method = 'PATCH'
+    commit_method = "PATCH"
     commit_jsonpatch = True
 
     # client-side query parameter
     _query_mapping = resource.QueryParameters(
-        'resource_uuid',
-        'resource_type',
-        'resource_class',
-        'status',
-        'uuid',
-        'lessee',
-        'start_time',
-        'end_time',
-        'lessee_id',
-        'name',
-        'properties',
-        'project_id',
-        'available_start_time',
-        'available_end_time',
+        "resource_uuid",
+        "resource_type",
+        "resource_class",
+        "status",
+        "uuid",
+        "lessee",
+        "start_time",
+        "end_time",
+        "lessee_id",
+        "name",
+        "properties",
+        "project_id",
+        "available_start_time",
+        "available_end_time",
     )
 
     #: The transaction date and time.
@@ -68,8 +68,7 @@ class Offer(resource.Resource):
     properties = resource.Body("properties")
     resource_properties = resource.Body("resource_properties")
 
-    _attr_aliases = {'resource_type': 'node_type',
-                     'resource': 'resource_name'}
+    _attr_aliases = {"resource_type": "node_type", "resource": "resource_name"}
 
     def claim_offer(self, session, **kwargs):
         """Claim an offer.
@@ -83,7 +82,7 @@ class Offer(resource.Resource):
         session = self._get_session(session)
 
         request = self._prepare_request(requires_id=True)
-        request.url = utils.urljoin(request.url, 'claim')
+        request.url = utils.urljoin(request.url, "claim")
         response = session.post(
             request.url,
             json=kwargs,
@@ -92,8 +91,6 @@ class Offer(resource.Resource):
             retriable_status_codes=None,
         )
 
-        msg = (
-            "Failed to claim offer {offer} ".format(offer=self.id)
-        )
+        msg = "Failed to claim offer {offer} ".format(offer=self.id)
         exceptions.raise_from_response(response, error_message=msg)
         return response.json()

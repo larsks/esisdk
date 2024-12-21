@@ -22,10 +22,10 @@ class TestESILEAPOffer(base.BaseESILEAPTest):
     def setUp(self):
         super(TestESILEAPOffer, self).setUp()
         self.project_id = self.conn.session.get_project_id()
-        self.node_1_uuid = os.getenv('NODE_1_UUID')
-        self.node_1_type = os.getenv('NODE_1_TYPE')
-        self.node_2_uuid = os.getenv('NODE_2_UUID')
-        self.node_2_type = os.getenv('NODE_2_TYPE')
+        self.node_1_uuid = os.getenv("NODE_1_UUID")
+        self.node_1_type = os.getenv("NODE_1_TYPE")
+        self.node_2_uuid = os.getenv("NODE_2_UUID")
+        self.node_2_type = os.getenv("NODE_2_TYPE")
 
     def test_offer_create_show_delete(self):
         offer = self.create_offer(self.node_1_uuid, self.node_1_type)
@@ -47,9 +47,11 @@ class TestESILEAPOffer(base.BaseESILEAPTest):
         time_now = datetime.now(timezone.utc)
         start_time = time_now + timedelta(minutes=5)
         end_time = start_time + timedelta(minutes=30)
-        extra_fields = {"lessee_id": self.project_id,
-                        "start_time": start_time,
-                        "end_time": end_time}
+        extra_fields = {
+            "lessee_id": self.project_id,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
         offer = self.create_offer(self.node_1_uuid, self.node_1_type, **extra_fields)
         loaded = self.conn.lease.get_offer(offer.id)
         self.assertEqual(loaded.id, offer.id)
@@ -70,12 +72,16 @@ class TestESILEAPOffer(base.BaseESILEAPTest):
         end_time_1 = start_time_1 + timedelta(minutes=30)
         start_time_2 = end_time_1 + timedelta(minutes=5)
         end_time_2 = start_time_2 + timedelta(minutes=30)
-        offer1 = self.create_offer(self.node_1_uuid, self.node_1_type,
-                                   **{"start_time": start_time_1,
-                                      "end_time": end_time_1})
-        offer2 = self.create_offer(self.node_1_uuid, self.node_1_type,
-                                   **{"start_time": start_time_2,
-                                      "end_time": end_time_2})
+        offer1 = self.create_offer(
+            self.node_1_uuid,
+            self.node_1_type,
+            **{"start_time": start_time_1, "end_time": end_time_1},
+        )
+        offer2 = self.create_offer(
+            self.node_1_uuid,
+            self.node_1_type,
+            **{"start_time": start_time_2, "end_time": end_time_2},
+        )
         offer3 = self.create_offer(self.node_2_uuid, self.node_2_type)
 
         offers_node1 = self.conn.lease.offers(resource_uuid=self.node_1_uuid)
@@ -100,12 +106,16 @@ class TestESILEAPOffer(base.BaseESILEAPTest):
         lease1_end_time = lease1_start_time + timedelta(minutes=30)
         lease2_start_time = lease1_end_time + timedelta(minutes=5)
         lease2_end_time = lease2_start_time + timedelta(minutes=30)
-        new_lease1 = {"name": "new_lease1",
-                      "start_time": lease1_start_time,
-                      "end_time": lease1_end_time}
-        new_lease2 = {"name": "new_lease2",
-                      "start_time": lease2_start_time,
-                      "end_time": lease2_end_time}
+        new_lease1 = {
+            "name": "new_lease1",
+            "start_time": lease1_start_time,
+            "end_time": lease1_end_time,
+        }
+        new_lease2 = {
+            "name": "new_lease2",
+            "start_time": lease2_start_time,
+            "end_time": lease2_end_time,
+        }
         lease1 = self.claim_offer(offer, **new_lease1)
         self.assertNotEqual(lease1, {})
 
@@ -113,7 +123,7 @@ class TestESILEAPOffer(base.BaseESILEAPTest):
 
         self.assertNotEqual(lease2, {})
         lease_list = self.conn.lease.leases(resource_uuid=self.node_1_uuid)
-        uuid_list = [l.id for l in lease_list]
+        uuid_list = [ls.id for ls in lease_list]
         self.assertNotEqual(lease_list, [])
         for lease_id in lease1["uuid"], lease2["uuid"]:
             self.assertIn(lease_id, uuid_list)

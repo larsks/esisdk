@@ -21,21 +21,21 @@ class TestESILEAPLease(base.BaseESILEAPTest):
     def setUp(self):
         super(TestESILEAPLease, self).setUp()
         self.project_id = self.conn.session.get_project_id()
-        self.node_1_uuid = os.getenv('NODE_1_UUID')
-        self.node_1_type = os.getenv('NODE_1_TYPE')
-        self.node_2_uuid = os.getenv('NODE_2_UUID')
-        self.node_2_type = os.getenv('NODE_2_TYPE')
+        self.node_1_uuid = os.getenv("NODE_1_UUID")
+        self.node_1_type = os.getenv("NODE_1_TYPE")
+        self.node_2_uuid = os.getenv("NODE_2_UUID")
+        self.node_2_type = os.getenv("NODE_2_TYPE")
 
     def test_lease_create_show_delete(self):
         time_now = datetime.now(timezone.utc)
         start_time = time_now + timedelta(minutes=5)
         end_time = start_time + timedelta(minutes=30)
-        extra_fields = {"node_type": self.node_1_type,
-                        "start_time": start_time,
-                        "end_time": end_time}
-        lease = self.create_lease(self.node_1_uuid,
-                                  self.project_id,
-                                  **extra_fields)
+        extra_fields = {
+            "node_type": self.node_1_type,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+        lease = self.create_lease(self.node_1_uuid, self.project_id, **extra_fields)
         self.assertEqual(lease.resource_uuid, self.node_1_uuid)
         self.assertEqual(lease.project_id, self.project_id)
         self.assertEqual(lease.node_type, self.node_1_type)
@@ -48,7 +48,7 @@ class TestESILEAPLease(base.BaseESILEAPTest):
         self.conn.lease.delete_lease(lease.id, ignore_missing=False)
 
         leases = self.conn.lease.leases(resource_uuid=self.node_1_uuid)
-        self.assertNotIn(lease.id, [l.id for l in leases])
+        self.assertNotIn(lease.id, [ls.id for ls in leases])
 
     def test_lease_show_not_found(self):
         self.assertRaises(
@@ -63,38 +63,46 @@ class TestESILEAPLease(base.BaseESILEAPTest):
         end_time_1 = start_time_1 + timedelta(minutes=30)
         start_time_2 = end_time_1 + timedelta(minutes=5)
         end_time_2 = start_time_2 + timedelta(minutes=30)
-        lease1 = self.create_lease(self.node_1_uuid,
-                                   self.project_id,
-                                   **{"node_type": self.node_1_type,
-                                      "start_time": start_time_1,
-                                      "end_time": end_time_1})
-        lease2 = self.create_lease(self.node_1_uuid,
-                                   self.project_id,
-                                   **{"node_type": self.node_1_type,
-                                      "start_time": start_time_2,
-                                      "end_time": end_time_2})
-        lease3 = self.create_lease(self.node_2_uuid,
-                                   self.project_id,
-                                   node_type=self.node_2_type)
+        lease1 = self.create_lease(
+            self.node_1_uuid,
+            self.project_id,
+            **{
+                "node_type": self.node_1_type,
+                "start_time": start_time_1,
+                "end_time": end_time_1,
+            },
+        )
+        lease2 = self.create_lease(
+            self.node_1_uuid,
+            self.project_id,
+            **{
+                "node_type": self.node_1_type,
+                "start_time": start_time_2,
+                "end_time": end_time_2,
+            },
+        )
+        lease3 = self.create_lease(
+            self.node_2_uuid, self.project_id, node_type=self.node_2_type
+        )
         leases_node1 = self.conn.lease.leases(resource_uuid=self.node_1_uuid)
-        lease_id_list = [l.id for l in leases_node1]
+        lease_id_list = [ls.id for ls in leases_node1]
         for lease_id in lease1.id, lease2.id:
             self.assertIn(lease_id, lease_id_list)
 
         leases_node2 = self.conn.lease.leases(resource_uuid=self.node_2_uuid)
-        self.assertEqual([l.id for l in leases_node2], [lease3.id])
+        self.assertEqual([ls.id for ls in leases_node2], [lease3.id])
 
     def test_lease_update_valid(self):
         time_now = datetime.now(timezone.utc)
         start_time = time_now + timedelta(minutes=5)
         end_time = start_time + timedelta(minutes=30)
-        end_time_new = (end_time + timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%S')
-        extra_fields = {"node_type": self.node_1_type,
-                        "start_time": start_time,
-                        "end_time": end_time}
-        lease = self.create_lease(self.node_1_uuid,
-                                  self.project_id,
-                                  **extra_fields)
+        end_time_new = (end_time + timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M:%S")
+        extra_fields = {
+            "node_type": self.node_1_type,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+        lease = self.create_lease(self.node_1_uuid, self.project_id, **extra_fields)
         updated_lease = self.conn.lease.update_lease(lease, end_time=end_time_new)
         self.assertEqual(updated_lease.get("end_time"), end_time_new)
 
@@ -103,12 +111,15 @@ class TestESILEAPLease(base.BaseESILEAPTest):
         start_time = time_now + timedelta(minutes=5)
         end_time = start_time + timedelta(minutes=30)
         start_time_new = start_time + timedelta(minutes=10)
-        extra_fields = {"node_type": self.node_1_type,
-                        "start_time": start_time,
-                        "end_time": end_time}
-        lease = self.create_lease(self.node_1_uuid,
-                                  self.project_id,
-                                  **extra_fields)
-        self.assertRaises(exceptions.HttpException,
-                          self.conn.lease.update_lease,
-                          lease, start_time=start_time_new)
+        extra_fields = {
+            "node_type": self.node_1_type,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+        lease = self.create_lease(self.node_1_uuid, self.project_id, **extra_fields)
+        self.assertRaises(
+            exceptions.HttpException,
+            self.conn.lease.update_lease,
+            lease,
+            start_time=start_time_new,
+        )

@@ -15,8 +15,8 @@ from openstack import resource
 
 
 class Lease(resource.Resource):
-    resources_key = 'leases'
-    base_path = '/leases'
+    resources_key = "leases"
+    base_path = "/leases"
 
     # capabilities
     allow_create = True
@@ -25,23 +25,23 @@ class Lease(resource.Resource):
     allow_delete = True
     allow_list = True
     allow_patch = True
-    commit_method = 'PATCH'
+    commit_method = "PATCH"
     commit_jsonpatch = True
 
     # client-side query parameter
     _query_mapping = resource.QueryParameters(
-        'resource_uuid',
-        'resource_type',
-        'status',
-        'uuid',
-        'project_id',
-        'start_time',
-        'end_time',
-        'owner_id',
-        'resource_class',
-        'offer_uuid',
-        'purpose',
-        'properties',
+        "resource_uuid",
+        "resource_type",
+        "status",
+        "uuid",
+        "project_id",
+        "start_time",
+        "end_time",
+        "owner_id",
+        "resource_class",
+        "offer_uuid",
+        "purpose",
+        "properties",
     )
 
     #: The transaction date and time.
@@ -67,8 +67,7 @@ class Lease(resource.Resource):
     resource_properties = resource.Body("resource_properties")
     purpose = resource.Body("purpose")
 
-    _attr_aliases = {'resource_type': 'node_type',
-                     'resource': 'resource_name'}
+    _attr_aliases = {"resource_type": "node_type", "resource": "resource_name"}
 
     def update(self, session, **kwargs):
         """Update a lease.
@@ -90,8 +89,6 @@ class Lease(resource.Resource):
             retriable_status_codes=None,
         )
 
-        msg = (
-            "Failed to update lease {lease} ".format(lease=self.id)
-        )
+        msg = "Failed to update lease {lease} ".format(lease=self.id)
         exceptions.raise_from_response(response, error_message=msg)
         return response.json()

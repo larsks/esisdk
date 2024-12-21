@@ -50,10 +50,11 @@ def network_and_port_list(connection, filter_network=None):
 
         fip_futures = []
         for floating_ip in floating_ips:
-            fip_futures.append(executor.submit(
-                get_floating_ip_and_port_forwarding,
-                connection,
-                floating_ip))
+            fip_futures.append(
+                executor.submit(
+                    get_floating_ip_and_port_forwarding, connection, floating_ip
+                )
+            )
         for fip_future in fip_futures:
             floating_ip, pfwds = fip_future.result()
             if len(pfwds):
@@ -74,7 +75,9 @@ def get_floating_ip_and_port_forwarding(connection, floating_ip):
     return floating_ip, pfwds
 
 
-def get_networks_from_port(connection, port, networks_dict={}, network_ports_dict={}, floating_ips_dict={}):
+def get_networks_from_port(
+    connection, port, networks_dict={}, network_ports_dict={}, floating_ips_dict={}
+):
     """Gets associated network objects from a port object
 
     :param connection: An OpenStack connection
@@ -98,12 +101,12 @@ def get_networks_from_port(connection, port, networks_dict={}, network_ports_dic
         parent_network = connection.network.get_network(network=port.network_id)
 
     if port.trunk_details:
-        subport_infos = port.trunk_details['sub_ports']
+        subport_infos = port.trunk_details["sub_ports"]
         for subport_info in subport_infos:
-            if subport_info['port_id'] in network_ports_dict:
-                subport = network_ports_dict[subport_info['port_id']]
+            if subport_info["port_id"] in network_ports_dict:
+                subport = network_ports_dict[subport_info["port_id"]]
             else:
-                subport = connection.network.get_port(subport_info['port_id'])
+                subport = connection.network.get_port(subport_info["port_id"])
 
             if subport.network_id in networks_dict:
                 trunk_network = networks_dict[subport.network_id]
@@ -112,8 +115,9 @@ def get_networks_from_port(connection, port, networks_dict={}, network_ports_dic
             trunk_ports.append(subport)
             trunk_networks.append(trunk_network)
 
-    floating_network_id = getattr(floating_ips_dict.get(port.id),
-                                  'floating_network_id', None)
+    floating_network_id = getattr(
+        floating_ips_dict.get(port.id), "floating_network_id", None
+    )
     if floating_network_id is None:
         floating_network = None
     elif networks_dict.get(floating_network_id):
@@ -136,12 +140,14 @@ def create_port(connection, node_name, network):
     :return: The created port object, or an existing port if a matching one was found.
     """
 
-    port_name = 'esi-{0}-{1}'.format(node_name, network.name)
-    existing_ports = list(connection.network.ports(name=port_name, status='DOWN'))
+    port_name = "esi-{0}-{1}".format(node_name, network.name)
+    existing_ports = list(connection.network.ports(name=port_name, status="DOWN"))
 
     if existing_ports:
         network_port = existing_ports[0]
     else:
-        network_port = connection.network.create_port(name=port_name, network_id=network.id, device_owner='baremetal:none')
+        network_port = connection.network.create_port(
+            name=port_name, network_id=network.id, device_owner="baremetal:none"
+        )
 
     return network_port

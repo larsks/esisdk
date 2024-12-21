@@ -14,4 +14,4 @@ from esi.lease import lease_service
 
 
 class ServicesMixin:
-    lease = lease_service.LeaseService(service_type='lease')
+    lease = lease_service.LeaseService(service_type="lease")
