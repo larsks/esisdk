@@ -15,8 +15,8 @@ from esi.cloud import _lease
 from openstack import connection
 
 
-class ESIConnection(connection.Connection,
-                    _services_mixin.ServicesMixin,
-                    _lease.LeaseCloudMixin):
+class ESIConnection(
+    connection.Connection, _services_mixin.ServicesMixin, _lease.LeaseCloudMixin
+):
     def __init__(self, **kwargs):
         super(ESIConnection, self).__init__(**kwargs)

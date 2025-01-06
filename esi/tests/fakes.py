@@ -51,28 +51,25 @@ class FakeEvent:
 
 
 def make_fake_offer(id, node_id, node_type):
-    return meta.obj_to_munch(FakeOffer(id=id,
-                                       node_id=node_id,
-                                       node_type=node_type))
+    return meta.obj_to_munch(FakeOffer(id=id, node_id=node_id, node_type=node_type))
 
 
 def make_fake_lease(id, node_id, node_type, offer_uuid):
-    return meta.obj_to_munch(FakeLease(id=id,
-                                       node_id=node_id,
-                                       node_type=node_type,
-                                       offer_uuid=offer_uuid))
+    return meta.obj_to_munch(
+        FakeLease(id=id, node_id=node_id, node_type=node_type, offer_uuid=offer_uuid)
+    )
 
 
 def make_fake_node(id, offer_uuid, lease_uuid):
-    return meta.obj_to_munch(FakeNode(id=id,
-                                      offer_uuid=offer_uuid,
-                                      lease_uuid=lease_uuid))
+    return meta.obj_to_munch(
+        FakeNode(id=id, offer_uuid=offer_uuid, lease_uuid=lease_uuid)
+    )
 
 
 def make_fake_event(id, event_type, last_event_time):
-    return meta.obj_to_munch(FakeEvent(id=id,
-                                       event_type=event_type,
-                                       last_event_time=last_event_time))
+    return meta.obj_to_munch(
+        FakeEvent(id=id, event_type=event_type, last_event_time=last_event_time)
+    )
 
 
 def get_lease_endpoint():

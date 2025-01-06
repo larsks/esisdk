@@ -23,7 +23,7 @@ class LeaseService(service_description.ServiceDescription):
     """The esi-leap lease service."""
 
     supported_versions = {
-        '1': _proxy.Proxy,
+        "1": _proxy.Proxy,
     }
 
     def _make_proxy(self, instance):
@@ -36,8 +36,8 @@ class LeaseService(service_description.ServiceDescription):
 
         # Check to see if we've got config that matches what we
         # understand in the SDK.
-        version_string = config.get_api_version('lease')
-        endpoint_override = config.get_endpoint('lease')
+        version_string = config.get_api_version("lease")
+        endpoint_override = config.get_endpoint("lease")
 
         # If the user doesn't give a version in config, but we only support
         # one version, then just use that version.
@@ -51,7 +51,7 @@ class LeaseService(service_description.ServiceDescription):
             proxy_class = self.supported_versions.get(version_string[0])
             if proxy_class:
                 proxy_obj = config.get_session_client(
-                    'lease',
+                    "lease",
                     constructor=proxy_class,
                 )
             else:
@@ -63,12 +63,12 @@ class LeaseService(service_description.ServiceDescription):
                     category=os_warnings.UnsupportedServiceVersion,
                 )
         elif endpoint_override:
-            temp_adapter = config.get_session_client('lease')
+            temp_adapter = config.get_session_client("lease")
             api_version = temp_adapter.get_endpoint_data().api_version
             proxy_class = self.supported_versions.get(str(api_version[0]))
             if proxy_class:
                 proxy_obj = config.get_session_client(
-                    'lease',
+                    "lease",
                     constructor=proxy_class,
                 )
             else:
@@ -96,10 +96,10 @@ class LeaseService(service_description.ServiceDescription):
             # we need to be explicit that this service has an endpoint_override
             # so that subsequent discovery calls don't get made incorrectly.
             if data.catalog_url != data.service_url:
-                ep_key = 'lease_endpoint_override'
+                ep_key = "lease_endpoint_override"
                 config.config[ep_key] = data.service_url
                 proxy_obj = config.get_session_client(
-                    'lease',
+                    "lease",
                     constructor=proxy_class,
                 )
             return proxy_obj
@@ -107,41 +107,36 @@ class LeaseService(service_description.ServiceDescription):
         # Make an adapter to let discovery take over
         version_kwargs = {}
         if version_string:
-            version_kwargs['version'] = version_string
+            version_kwargs["version"] = version_string
             if getattr(
                 self.supported_versions[str(version_string)],
-                'skip_discovery',
+                "skip_discovery",
                 False,
             ):
                 # set the endpoint_override to the current
                 # catalog endpoint value + version number,
                 # otherwise next request will try to perform discovery.
-                temp_adapter = config.get_session_client('lease')
+                temp_adapter = config.get_session_client("lease")
                 ep_override = temp_adapter.get_endpoint(skip_discovery=True)
-                ep_key = '{service_type}_endpoint_override'.format(
-                    service_type=self.service_type.replace('-', '_')
+                ep_key = "{service_type}_endpoint_override".format(
+                    service_type=self.service_type.replace("-", "_")
                 )
-                config.config[ep_key] = '{}/v{}'.format(
-                    ep_override, version_string)
+                config.config[ep_key] = "{}/v{}".format(ep_override, version_string)
                 return config.get_session_client(
-                    'lease',
+                    "lease",
                     allow_version_hack=True,
-                    constructor=self.supported_versions[
-                        str(version_string)
-                    ],
+                    constructor=self.supported_versions[str(version_string)],
                     **version_kwargs,
                 )
         else:
-            supported_versions = sorted(
-                [int(f) for f in self.supported_versions]
-            )
-            version_kwargs['min_version'] = str(supported_versions[0])
-            version_kwargs['max_version'] = '{version}.latest'.format(
+            supported_versions = sorted([int(f) for f in self.supported_versions])
+            version_kwargs["min_version"] = str(supported_versions[0])
+            version_kwargs["max_version"] = "{version}.latest".format(
                 version=str(supported_versions[-1])
             )
 
         temp_adapter = config.get_session_client(
-            'lease', allow_version_hack=True, **version_kwargs
+            "lease", allow_version_hack=True, **version_kwargs
         )
         found_version = temp_adapter.get_api_major_version()
         if found_version is None:
@@ -165,7 +160,7 @@ class LeaseService(service_description.ServiceDescription):
         proxy_class = self.supported_versions.get(str(found_version[0]))
         if proxy_class:
             return config.get_session_client(
-                'lease',
+                "lease",
                 allow_version_hack=True,
                 constructor=proxy_class,
                 **version_kwargs,

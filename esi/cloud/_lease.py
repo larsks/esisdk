@@ -26,9 +26,9 @@ class LeaseCloudMixin:
 
     def create_offer(self, resource_uuid, node_type, **kwargs):
         """Create an offer"""
-        return self.lease.create_offer(resource_uuid=resource_uuid,
-                                       node_type=node_type,
-                                       **kwargs)
+        return self.lease.create_offer(
+            resource_uuid=resource_uuid, node_type=node_type, **kwargs
+        )
 
     def delete_offer(self, offer):
         """Delete an offer"""
@@ -44,9 +44,9 @@ class LeaseCloudMixin:
 
     def create_lease(self, resource_uuid, project_id, **kwargs):
         """Create a lease"""
-        return self.lease.create_lease(resource_uuid=resource_uuid,
-                                       project_id=project_id,
-                                       **kwargs)
+        return self.lease.create_lease(
+            resource_uuid=resource_uuid, project_id=project_id, **kwargs
+        )
 
     def delete_lease(self, lease):
         """Delete a lease"""

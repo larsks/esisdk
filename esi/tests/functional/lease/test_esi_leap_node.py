@@ -20,15 +20,15 @@ class TestESILEAPNode(base.BaseESILEAPTest):
         super(TestESILEAPNode, self).setUp()
 
     def test_node_list(self):
-        """ Tests functionality "esi node list" using node_uuid or node name.
-            checks node_uuid or node_name is present in node list or not.
-            Test steps:
-            1) Set the environment variables using
-               export NODE_3_NAME=node_name
-            2) Checks that the output of "node list" contains
-               the node uuid or node name it's tested with. """
+        """Tests functionality "esi node list" using node_uuid or node name.
+        checks node_uuid or node_name is present in node list or not.
+        Test steps:
+        1) Set the environment variables using
+           export NODE_3_NAME=node_name
+        2) Checks that the output of "node list" contains
+           the node uuid or node name it's tested with."""
 
-        node_name = os.getenv('NODE_3_NAME')
+        node_name = os.getenv("NODE_3_NAME")
         nodes = self.conn.lease.nodes()
 
         self.assertNotEqual(nodes, [])

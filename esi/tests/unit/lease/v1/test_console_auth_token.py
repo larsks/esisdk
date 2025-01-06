@@ -14,27 +14,28 @@ from esi.lease.v1 import console_auth_token
 from openstack.tests.unit import base
 
 
-FAKE = {'node_uuid': 'node_001',
-        'token': 'fake_token',
-        'access_url': 'ws://0.0.0.0:7777?token=fake_token',
-        }
+FAKE = {
+    "node_uuid": "node_001",
+    "token": "fake_token",
+    "access_url": "ws://0.0.0.0:7777?token=fake_token",
+}
 
 
 class TestConsoleAuthToken(base.TestCase):
     def test_basic(self):
         c = console_auth_token.ConsoleAuthToken()
         self.assertIsNone(c.resource_key)
-        self.assertEqual('console_auth_tokens', c.resources_key)
-        self.assertEqual('/console_auth_tokens', c.base_path)
+        self.assertEqual("console_auth_tokens", c.resources_key)
+        self.assertEqual("/console_auth_tokens", c.base_path)
         self.assertTrue(c.allow_create)
         self.assertFalse(c.allow_fetch)
         self.assertTrue(c.allow_commit)
         self.assertTrue(c.allow_delete)
         self.assertFalse(c.allow_list)
-        self.assertEqual('PATCH', c.commit_method)
+        self.assertEqual("PATCH", c.commit_method)
 
     def test_instantiate(self):
         c = console_auth_token.ConsoleAuthToken(**FAKE)
-        self.assertEqual(FAKE['node_uuid'], c.node_uuid)
-        self.assertEqual(FAKE['token'], c.token)
-        self.assertEqual(FAKE['access_url'], c.access_url)
+        self.assertEqual(FAKE["node_uuid"], c.node_uuid)
+        self.assertEqual(FAKE["token"], c.token)
+        self.assertEqual(FAKE["access_url"], c.access_url)

@@ -19,8 +19,8 @@ from openstack._log import enable_logging
 import openstack.config
 
 __all__ = [
-    'connect',
-    'enable_logging',
+    "connect",
+    "enable_logging",
 ]
 
 
@@ -67,5 +67,5 @@ def connect(
     )
     return esi.connection.ESIConnection(
         config=cloud_region,
-        vendor_hook=kwargs.get('vendor_hook'),
+        vendor_hook=kwargs.get("vendor_hook"),
     )

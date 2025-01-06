@@ -21,7 +21,6 @@ from openstack import proxy
 
 
 class Proxy(proxy.Proxy):
-
     _resource_registry = {
         "offer": _offer.Offer,
         "lease": _lease.Lease,
@@ -47,13 +46,13 @@ class Proxy(proxy.Proxy):
         res = self._get_resource(resource_type, value)
         kwargs = {}
         if fields:
-            kwargs['fields'] = _common.fields_type(fields, resource_type)
+            kwargs["fields"] = _common.fields_type(fields, resource_type)
         return res.fetch(
             self,
             error_message="No {resource_type} found for {value}".format(
                 resource_type=resource_type.__name__, value=value
             ),
-            **kwargs
+            **kwargs,
         )
 
     def offers(self, **query):
@@ -274,4 +273,5 @@ class Proxy(proxy.Proxy):
         return self._delete(
             _console_auth_token.ConsoleAuthToken,
             node_uuid_or_name,
-            ignore_missing=ignore_missing)
+            ignore_missing=ignore_missing,
+        )

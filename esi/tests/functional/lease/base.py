@@ -32,33 +32,27 @@ class BaseESILEAPTest(base.BaseFunctionalTest):
         self.conn = connection.ESIConnection(config=base.TEST_CLOUD_REGION)
 
     def create_offer(self, node_id=None, node_type=None, **kwargs):
-        offer = self.conn.lease.create_offer(resource_uuid=node_id,
-                                             node_type=node_type,
-                                             **kwargs)
+        offer = self.conn.lease.create_offer(
+            resource_uuid=node_id, node_type=node_type, **kwargs
+        )
         self.addCleanup(
-            lambda: self.conn.lease.delete_offer(
-                offer.id, ignore_missing=True
-            )
+            lambda: self.conn.lease.delete_offer(offer.id, ignore_missing=True)
         )
         return offer
 
     def create_lease(self, node_id=None, project_id=None, **kwargs):
-        lease = self.conn.lease.create_lease(resource_uuid=node_id,
-                                             project_id=project_id,
-                                             **kwargs)
+        lease = self.conn.lease.create_lease(
+            resource_uuid=node_id, project_id=project_id, **kwargs
+        )
         self.addCleanup(
-            lambda: self.conn.lease.delete_lease(
-                lease.id, ignore_missing=True
-            )
+            lambda: self.conn.lease.delete_lease(lease.id, ignore_missing=True)
         )
         return lease
 
     def claim_offer(self, offer, **kwargs):
         lease = self.conn.lease.claim_offer(offer, **kwargs)
         self.addCleanup(
-            lambda: self.conn.lease.delete_lease(
-                lease["uuid"], ignore_missing=True
-            )
+            lambda: self.conn.lease.delete_lease(lease["uuid"], ignore_missing=True)
         )
         return lease
 

@@ -14,8 +14,8 @@ from openstack import resource
 
 
 class Node(resource.Resource):
-    resources_key = 'nodes'
-    base_path = '/nodes'
+    resources_key = "nodes"
+    base_path = "/nodes"
 
     # capabilities
     allow_create = False
@@ -26,12 +26,7 @@ class Node(resource.Resource):
 
     # client-side query parameter
     _query_mapping = resource.QueryParameters(
-        'name',
-        'owner',
-        'lessee',
-        'resource_class',
-        'offer_uuid',
-        'lease_uuid'
+        "name", "owner", "lessee", "resource_class", "offer_uuid", "lease_uuid"
     )
 
     #: The transaction date and time.

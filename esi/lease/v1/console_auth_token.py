@@ -14,8 +14,8 @@ from openstack import resource
 
 
 class ConsoleAuthToken(resource.Resource):
-    resources_key = 'console_auth_tokens'
-    base_path = '/console_auth_tokens'
+    resources_key = "console_auth_tokens"
+    base_path = "/console_auth_tokens"
 
     # capabilities
     allow_create = True
@@ -23,7 +23,7 @@ class ConsoleAuthToken(resource.Resource):
     allow_commit = True
     allow_delete = True
     allow_list = False
-    commit_method = 'PATCH'
+    commit_method = "PATCH"
     commit_jsonpatch = True
 
     #: The transaction date and time.
