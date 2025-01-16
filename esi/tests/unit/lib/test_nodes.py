@@ -999,9 +999,9 @@ class TestDetach(TestCase):
         self.connection.baremetal.detach_vif_from_node.assert_called_once_with(
             self.node, "neutron_port_uuid_1"
         )
-        self.assertEqual(True, result)
+        self.assertEqual([("neutron_port_uuid_1", True)], result)
 
-    def test_take_multiple_port_action(self):
+    def test_take_action_node_has_multiple_ports(self):
         self.connection.network.find_port.return_value = self.neutron_port1
         self.connection.baremetal.ports.return_value = [self.port1, self.port2]
 
@@ -1010,7 +1010,7 @@ class TestDetach(TestCase):
         self.connection.baremetal.detach_vif_from_node.assert_called_once_with(
             self.node, "neutron_port_uuid_1"
         )
-        self.assertEqual(True, result)
+        self.assertEqual([("neutron_port_uuid_1", True)], result)
 
     def test_take_action_port_exception(self):
         self.connection.network.find_port.side_effect = exceptions.NotFoundException
@@ -1034,4 +1034,54 @@ class TestDetach(TestCase):
 
         self.assertRaises(
             exceptions.ResourceFailure, nodes.network_detach, self.connection, "node1"
+        )
+
+    def test_take_action_detach_multiple_ports(self):
+        self.connection.network.find_port.side_effect = [
+            self.neutron_port1,
+            self.neutron_port2,
+        ]
+        self.connection.baremetal.ports.return_value = [self.port1, self.port2]
+
+        result = nodes.network_detach(
+            self.connection,
+            "node1",
+            port_names_or_uuids=["neutron_port1", "neutron_port2"],
+        )
+
+        self.connection.baremetal.detach_vif_from_node.assert_has_calls(
+            [
+                mock.call(self.node, "neutron_port_uuid_1"),
+                mock.call(self.node, "neutron_port_uuid_2"),
+            ]
+        )
+        self.assertEqual(
+            [("neutron_port_uuid_1", True), ("neutron_port_uuid_2", True)], result
+        )
+
+    def test_take_action_detach_all_ports(self):
+        self.connection.network.find_port.side_effect = [
+            self.neutron_port1,
+            self.neutron_port2,
+        ]
+        self.connection.baremetal.ports.return_value = [
+            self.port1,
+            self.port2,
+            self.port3,
+        ]
+
+        result = nodes.network_detach(
+            self.connection,
+            "node1",
+            all_ports=True,
+        )
+
+        self.connection.baremetal.detach_vif_from_node.assert_has_calls(
+            [
+                mock.call(self.node, "neutron_port_uuid_1"),
+                mock.call(self.node, "neutron_port_uuid_2"),
+            ]
+        )
+        self.assertEqual(
+            [("neutron_port_uuid_1", True), ("neutron_port_uuid_2", True)], result
         )
