@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["openstack"]
+
+[project]
+name = "esisdk"
+dynamic = ["version"]
+description = "An SDK for building applications to work with ESI"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Environment :: Console",
+    "Environment :: OpenStack",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "openstacksdk>=4.0.1",
+]
+
+[project.urls]
+Homepage = "https://esi.readthedocs.io/en/latest/"
+
+[dependency-groups]
+dev = [
+    "coverage>=4.0,!=4.4",
+    "mock>=5.1.0",
+    "oslo-config>=9.6.0",
+    "oslotest>=5.0.0",
+    "requests-mock>=1.12.1",
+    "stestr>=1.0.0",
+]
+
+[tool.setuptools_scm]
+
